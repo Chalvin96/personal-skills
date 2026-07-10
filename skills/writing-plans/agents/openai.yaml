@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Planning"
+  short_description: "Turn requirements into OpenSpec artifacts."
+  default_prompt: "Create the OpenSpec proposal, design, specs, and tasks for this change."

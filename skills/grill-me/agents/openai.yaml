@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Grill"
+  short_description: "Stress-test a change before proposal."
+  default_prompt: "Grill this change and capture the resolved decisions in OpenSpec."
