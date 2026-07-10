@@ -37,5 +37,4 @@ skills require the globally installed `openspec` command.
 ## Attribution
 
 - `skills/wayfinder` is adapted from [Matt Pocock's Wayfinder skill](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder), licensed under [MIT](https://github.com/mattpocock/skills/blob/main/LICENSE).
-- `skills/openspec-*` are derived from [OpenSpec](https://github.com/Fission-AI/OpenSpec) generated workflow skills. Their source attribution remains in each skill's metadata.
-- Upstream MIT notices are retained in [`LICENSES/`](LICENSES/).
+- `skills/openspec-*` are derived from [OpenSpec](https://github.com/Fission-AI/OpenSpec) generated workflow skills, available under [MIT](https://github.com/Fission-AI/OpenSpec/blob/main/LICENSE).
