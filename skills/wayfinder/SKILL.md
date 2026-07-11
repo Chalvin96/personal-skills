@@ -1,91 +1,63 @@
 ---
 name: wayfinder
-description: Chart a large, uncertain engineering initiative as a small GitHub-issue decision map before implementation. Use when a destination spans multiple agent sessions, key decisions remain unknown, or the user asks to explore, map, or wayfind a broad effort. Routes resolved implementation work into OpenSpec and durable current state into the repository's canonical knowledge system.
+description: Resolve implementation uncertainty as local decision tickets inside an OpenSpec change. Use after proposal/specs when material implementation choices remain. Consolidates decisions into a TRD and dependency-safe cycles without GitHub issues.
 ---
 
-# Wayfinder
+# Local Wayfinder
 
-Use Wayfinder to make an uncertain destination navigable. It is for discovery and
-decisions, not for implementation. If the work is already concrete enough for a
-single OpenSpec change, skip Wayfinder and use the OpenSpec workflow directly.
+Plan implementation; do not implement production code.
 
-## Canonical artifacts
+## Artifacts
 
-- Discover and read the repository's canonical knowledge source (for example
-  `knowledge/`, `docs/`, or `AGENTS.md`) before charting or resolving a ticket.
-- Use one GitHub issue labelled `wayfinder:map` as the map and child issues for
-  its decision tickets. Use `gh issue`; names and links are clearer than bare
-  issue numbers in user-facing text.
-- Keep the map concise: destination, notes, closed decisions with links, unknown
-  in-scope questions, and out-of-scope boundaries.
-- When a decision is implementation-ready, create or update an OpenSpec change.
-  Do not put proposals, task history, or investigations into `knowledge/`.
-- After an implemented change is verified and archived, update only the
-  repository's canonical current-state knowledge.
+Work only inside `openspec/changes/<change>/`:
 
-## Mechanical preferences
+- `tickets/index.md`: sole ticket status ledger.
+- `tickets/D-*.md`: evidence, options, decision, consequences.
+- `trd.md`: sole consolidated implementation design.
+- `tasks.md`: sole cycle status ledger.
+- `tasks/C-*.md`: stateless executor packets; no checkboxes.
+- `artifacts/ui/<D-id>/`: accepted visual evidence.
 
-- Prefer mechanical, deterministic enforcement over review-only conventions.
-- For a proposed rule, state its executable check, command, scope, exceptions,
-  baseline, and failure behavior before calling it decided.
-- Treat existing violations explicitly: migrate them, document a temporary
-  ratchet, or rule them out. Do not silently grandfather them.
-- Adopt repository-specific test naming only when it has a deterministic checker
-  and a documented migration strategy.
-- Keep one ticket to one answer that fits an agent session. Do not create tickets
-  for foggy questions.
+Use stable IDs and requirement → decision → TRD → cycle traceability. Never use
+GitHub issues. Do not create tickets for obvious mechanics.
 
-## Map template
+## Chart
 
-```markdown
-## Destination
-
-<A concrete end state in one or two sentences.>
-
-## Notes
-
-<Relevant knowledge concepts, OpenSpec changes, constraints, and skills.>
-
-## Decisions so far
-
-- [<closed ticket title>](<link>) — <one-line durable answer>
-
-## Not yet specified
-
-<In-scope questions not yet sharp enough to ticket.>
-
-## Out of scope
-
-<Explicit exclusions and why.>
-```
-
-## Chart a map
-
-1. Establish the destination. Use `$grill-me` when product, domain, or design
-   choices are materially unresolved.
-2. Read relevant knowledge and inspect the codebase for the current baseline.
-3. Create the map issue and only the sharp, answerable child tickets. Label each
-   `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or
-   `wayfinder:task`; add dependency links after creation.
-4. Record unknown but in-scope areas under **Not yet specified** rather than
-   pretending they are ready tickets.
-5. Stop after charting. Do not implement during the mapping session.
+1. Read proposal, specs, canonical knowledge, and relevant code.
+2. Name the destination: the TRD and cycles are implementation-ready.
+3. Create only sharp material decisions: architecture, data, migration, rollout,
+   security, performance, integration seams, or UI behavior.
+4. Write `tickets/index.md`, then `D-*.md` files using the schema template.
+5. Add dependencies after ticket IDs exist. Stop after charting.
 
 ## Resolve one ticket
 
-1. Load the map, choose one unblocked ticket, and assign it before starting.
-2. Read the ticket, its relevant knowledge, and linked OpenSpec artifacts.
-3. Investigate only enough to answer its question. For rule proposals, prove the
-   baseline with the actual command or a deterministic audit.
-4. Post the resolution as a GitHub comment, close the ticket, and add a one-line
-   linked decision to the map.
-5. Add only newly sharp questions as tickets; move genuine exclusions to **Out
-   of scope**.
-6. If the route is now clear, create a validated OpenSpec proposal. Do not
-   implement in Wayfinder.
+1. Select one unblocked, unclaimed ticket from `tickets/index.md`; claim it.
+2. Investigate only enough to answer its question.
+3. Record evidence, rejected options, decision, and consequences in that ticket.
+4. Mark it CLOSED and ready for integration. DEFERRED is allowed only when
+   non-blocking and justified.
+5. One integrator incorporates closed decisions into `trd.md` and marks them
+   integrated. Parallel ticket agents must not edit overlapping TRD sections.
+6. Add newly sharp decisions; keep vague future questions out of the ticket set.
 
-## Completion
+## UI decisions
 
-The map is complete when no decision blocks a well-scoped OpenSpec change. Report
-the destination, linked decisions, remaining exclusions, and the OpenSpec change
-to apply next.
+Every UI ticket uses the Superpowers brainstorming loop through `$grill-me`.
+Read the project's design-system knowledge first. Use
+`grill-me/visual-companion.md` for materially visual questions. Store accepted
+assets under `artifacts/ui/<D-id>/`; express behavior, responsive rules,
+accessibility, and components textually in the ticket and TRD.
+
+## Consolidate and cycle
+
+When all blocking tickets are CLOSED and integrated:
+
+1. Consistency-check the TRD and its requirement/decision traceability.
+2. Mark the TRD IMPLEMENTATION-READY, not frozen; new evidence may reopen a ticket.
+3. Split work into dependency-safe, independently verifiable cycles.
+4. Write `tasks/C-*.md` packets with outcome, scope, procedure, exact tests and
+   commands, rollback, and stop conditions.
+5. Generate `tasks.md` with one checkbox per cycle.
+6. Run OpenSpec strict validation and the mechanical Wayfinder validator.
+7. Hand off to `openspec-apply-change`; do not implement here.

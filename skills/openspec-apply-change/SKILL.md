@@ -58,6 +58,13 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
 
+   For `wayfinder-driven`, first run
+   `wayfinder-validate <change-dir>`.
+   Read `tasks.md`, select the first incomplete dependency-ready cycle, then
+   read proposal, specs, `trd.md`, that complete `tasks/C-*.md` packet, and its
+   cited local tickets/artifacts. Implement one cycle per invocation unless the
+   user explicitly asks to continue.
+
 5. **Show current progress**
 
    Display:
@@ -147,6 +154,12 @@ What would you like to do?
 - If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task
+- For `wayfinder-driven`, update only the cycle checkbox in `tasks.md`, after
+  every acceptance gate in the cycle packet passes.
+- If implementation reveals a new design decision, stop, create or reopen a
+  local ticket, integrate it into the TRD, and revalidate.
+- For `wayfinder-driven`, stop after that one cycle. The generic keep-going
+  loop below applies only to schemas whose tracked tasks are individual tasks.
 - Pause on errors, blockers, or unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
 

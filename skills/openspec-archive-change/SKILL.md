@@ -27,6 +27,11 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
 
 2. **Check artifact completion status**
 
+   For `wayfinder-driven`, also run
+   `wayfinder-validate <change-dir>`.
+   Refuse archive while a blocking ticket is unresolved or unintegrated, a
+   cycle is incomplete, or traceability is invalid.
+
    Run `openspec status --change "<name>" --json` to check artifact completion.
 
    Parse the JSON to understand:

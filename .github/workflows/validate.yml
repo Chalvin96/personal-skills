@@ -1,0 +1,36 @@
+name: Validate personal skills
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile validator
+        run: python -m py_compile scripts/validate-wayfinder-change.py
+      - name: Test workflow validator
+        run: python -m unittest scripts/test_validate_wayfinder_change.py
+      - name: Validate skill metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          failed = False
+          for path in Path('skills').glob('*/SKILL.md'):
+              text = path.read_text()
+              ok = text.startswith('---\n') and '\nname:' in text and '\ndescription:' in text
+              print(('OK ' if ok else 'ERROR ') + str(path))
+              failed |= not ok
+          sys.exit(failed)
+          PY
+      - name: Check schema assets
+        run: test -f schemas/wayfinder-driven/schema.yaml && test -f schemas/wayfinder-driven/templates/trd.md
+      - name: Check whitespace
+        run: git diff --check HEAD~1..HEAD
