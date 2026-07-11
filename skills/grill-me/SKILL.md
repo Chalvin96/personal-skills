@@ -52,7 +52,9 @@ as prose. Make the offer its own message and wait for the answer:
 > comparisons as we go. Want to use the visual companion?
 
 If the user accepts and the host exposes a browser-based visual companion, open
-it for the first visual question. Otherwise, use the best available visual
+it for the first visual question. Before starting it, read
+[visual-companion.md](visual-companion.md) and use `scripts/start-server.sh`
+with `--project-dir` and `--open`. Otherwise, use the best available visual
 artifact (for example, an image, diagram, or text wireframe). Decide per
 question whether the visual companion helps; keep requirements, trade-offs, and
 other text-first questions in the normal conversation. If the user declines,
