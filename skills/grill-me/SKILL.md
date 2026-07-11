@@ -60,10 +60,10 @@ question whether the visual companion helps; keep requirements, trade-offs, and
 other text-first questions in the normal conversation. If the user declines,
 continue text-only and do not offer again unless they raise it.
 
-For every visual screen, first discover the target project's design system from
-its agent instructions, canonical knowledge, tokens, component library, and
-existing UI. Use those tokens, type scale, components, and interaction patterns;
-do not invent a parallel visual language.
+For every visual screen, first read the target project's canonical design-system
+knowledge (for example `knowledge/design-system/`). Then verify it against tokens,
+component libraries, and existing UI. Use its tokens, type scale, components,
+and interaction patterns; do not invent a parallel visual language.
 
 ## Guardrails
 

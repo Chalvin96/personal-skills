@@ -4,11 +4,12 @@ Browser-based visual brainstorming companion for showing mockups, diagrams, and 
 
 ## Design-system contract
 
-Before starting a visual session, discover the target project's design system:
-agent instructions, canonical knowledge, token files, UI package, and adjacent
-screens. Record the relevant colors, typography, spacing, radii, components, and
-interaction patterns in the session's `content/design-system.css`. The server
-injects that stylesheet into every fragment screen.
+Before starting a visual session, read the target project's canonical
+design-system knowledge first (for example `knowledge/design-system/`). Verify it
+against token files, UI packages, and adjacent screens. Record the relevant
+colors, typography, spacing, radii, components, and interaction patterns in the
+session's `content/design-system.css`. The server injects that stylesheet into
+every fragment screen.
 
 Use project tokens and existing component patterns in every mockup. The bundled
 frame styles are fallback infrastructure only; do not use them as a new visual
