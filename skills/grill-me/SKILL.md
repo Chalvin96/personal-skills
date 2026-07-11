@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Grill unresolved product, architecture, or UI decisions before implementation. Use when the user says "grill me" or asks to pressure-test a design.
+description: Run the Superpowers brainstorming/grilling loop for unresolved product, architecture, or UI decisions before implementation. Use when the user says "grill me", asks to pressure-test a design, or a Wayfinder UI ticket needs human decisions and visual companion support.
 ---
 
 # OpenSpec Grill
@@ -43,6 +43,10 @@ implementation: do not edit production code or canonical current-state knowledge
    it apply-ready.
 
 ## UI visual companion
+
+When invoked from a UI-related Wayfinder ticket, this section is mandatory:
+classify every question as visual or text-first, and use the companion for each
+materially visual decision after the user accepts the session.
 
 For UI work, offer a visual companion only when the next question would be
 clearer as a mockup, wireframe, flow, diagram, or side-by-side comparison than

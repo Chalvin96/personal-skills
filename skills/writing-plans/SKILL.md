@@ -1,53 +1,34 @@
 ---
 name: writing-plans
-description: Turn an agreed feature, non-trivial bug fix, or architectural change into validated OpenSpec proposal, design, behavioral specs, and tasks. Use before implementation when requirements are sufficiently clear.
+description: Turn agreed intent into an OpenSpec proposal and behavioral specs, then use local Wayfinder tickets to produce a TRD and implementation cycles. Use before implementation when product requirements are sufficiently clear.
 ---
 
-# OpenSpec Planning
+# Wayfinder-driven OpenSpec planning
 
-Write the implementation plan as OpenSpec artifacts.
-
-## Workflow
-
-1. Announce: "I'm using the writing-plans skill to create the implementation
-   plan."
-2. Discover and read the repository's canonical knowledge source and any OpenSpec change selected by
-   the user. Use `$grill-me` first when material product or design decisions are
-   still unresolved.
-3. Reuse a named active change, or create one with a concise kebab-case name:
-
-   ```bash
-   openspec new change <name>
-   openspec status --change <name> --json
-   ```
-
-4. Create every apply-required artifact in the dependency order reported by
-   `status`. Before each artifact, get its current template and rules:
-
-   ```bash
-   openspec instructions <artifact> --change <name> --json
-   ```
-
-   - `proposal.md`: why, scope, capability names, and impact.
-   - `specs/<capability>/spec.md`: observable SHALL requirements and testable
-     scenarios; use delta headings when modifying an existing capability.
-   - `design.md`: decisions, alternatives, risks, migration, and affected knowledge.
-   - `tasks.md`: small ordered checkboxes with exact files, tests, and commands.
-
-5. If the repository has canonical current-state knowledge, the final task group
-   MUST update affected concepts using that repository's validator. Keep proposal
-   and task history in OpenSpec.
-6. Validate before offering implementation:
-
-   ```bash
-   openspec validate <name> --strict
-   ```
-
-7. Report the change name and state that `/opsx:apply <name>` is the next step.
-   Do not implement production code in this skill.
+1. Read canonical knowledge and existing change context. Use `$grill-me` when
+   product behavior remains unresolved.
+2. Create new changes with:
+   `openspec new change <name> --schema wayfinder-driven`.
+   Preserve existing changes on their current schema unless migration is explicit.
+3. Follow `openspec status` and `openspec instructions` for every artifact.
+4. Write proposal and behavioral specs first. Requirements own observable
+   behavior; do not invent implementation details to make the change apply-ready.
+5. Invoke `$wayfinder` for material implementation decisions. It creates local
+   `tickets/`, integrates decisions into `trd.md`, and derives `tasks/C-*.md`
+   cycle packets plus the `tasks.md` manifest.
+6. UI tickets use `$grill-me`; materially visual decisions use its visual
+   companion after reading the project design system.
+7. End cycles with canonical knowledge updates and repository-specific validation.
+8. Run:
+   `openspec validate <name> --strict`
+   and
+   `wayfinder-validate <change-dir>`.
+9. Report the change and first dependency-ready cycle. Do not implement here.
 
 ## Guardrails
 
 - Split unrelated capabilities into separate changes.
-- Keep requirement behavior in specs and implementation mechanics in design/tasks.
-- Do not archive until tasks, implementation verification, and required knowledge updates pass.
+- Specs own behavior; tickets own investigations; TRD owns implementation
+  design; cycle packets own executor instructions; tasks.md alone owns status.
+- Blocking tickets must be closed and integrated before cycles are created.
+- Existing active changes are not bulk-migrated.

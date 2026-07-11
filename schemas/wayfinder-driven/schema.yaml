@@ -1,0 +1,44 @@
+name: wayfinder-driven
+version: 1
+description: Proposal → behavioral specs → local decisions → TRD → cycles
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Intent, scope, capabilities, and impact
+    template: proposal.md
+    instruction: Define why and what changes. Keep implementation choices out.
+    requires: []
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Observable behavioral requirements
+    template: spec.md
+    instruction: Write SHALL requirements with four-hash WHEN/THEN scenarios.
+    requires: [proposal]
+  - id: tickets
+    generates: "tickets/**/*.md"
+    description: Local Wayfinder implementation-decision tickets
+    template: ticket.md
+    instruction: Create only material decision tickets. tickets/index.md owns status.
+    requires: [proposal, specs]
+  - id: trd
+    generates: trd.md
+    description: Consolidated technical requirements document
+    template: trd.md
+    instruction: Integrate closed ticket decisions into one canonical implementation design.
+    requires: [tickets]
+  - id: cycles
+    generates: "tasks/C-*.md"
+    description: Dependency-safe executor cycle packets
+    template: cycle.md
+    instruction: Derive stateless, independently verifiable cycle packets from the TRD.
+    requires: [trd]
+  - id: tasks
+    generates: tasks.md
+    description: Canonical cycle status manifest
+    template: tasks.md
+    instruction: Track one checkbox per cycle; detailed instructions live in tasks/C-*.md.
+    requires: [cycles]
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: Validate the workflow, then implement one incomplete dependency-ready cycle per invocation.
