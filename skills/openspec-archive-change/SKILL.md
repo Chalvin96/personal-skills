@@ -1,9 +1,9 @@
 ---
 name: openspec-archive-change
-description: Archive a completed OpenSpec change after merging durable behavior into canonical knowledge. Requires the OpenSpec CLI. Use when finalizing a verified change without retaining current-state specs under openspec/specs.
+description: Finalize a completed OpenSpec change by merging durable behavior and rationale into canonical knowledge, then removing the change artifacts and matching specs. Use when finishing verified work without retaining OpenSpec process history.
 ---
 
-Archive a completed change in the experimental workflow.
+Finalize a completed change without retaining process history.
 
 If the work is in a registered OpenSpec store, read [store selection](../_personal-shared/openspec-store-selection.md) before running commands.
 
@@ -59,21 +59,22 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
    knowledge. Refuse archival until every durable behavior is captured in the
    smallest relevant knowledge concepts and the knowledge validator passes.
 
-   Do not sync delta specs to `openspec/specs/`. If a matching capability spec
-   already exists there, remove it only after its complete current behavior has
-   been merged into knowledge.
+   Do not sync delta specs to `openspec/specs/`. Capture important rationale in
+   the relevant concept or decision record. If a matching capability spec already
+   exists, remove it only after its complete current behavior is in knowledge.
 
-5. **Perform the archive**
+5. **Remove completed artifacts**
 
-   Run `openspec archive "<name>" --skip-specs` with the selected store flag when
-   applicable. Validate OpenSpec and canonical knowledge after the move.
+   Remove `openspec/changes/<name>/` and matching capability directories under
+   `openspec/specs/`. Do not create or retain a dated archive directory. Validate
+   OpenSpec and canonical knowledge after removal.
 
 6. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
-   - Archive location
+   - Removed change path
    - Knowledge concepts updated
    - Capability specs removed or skipped
    - Note about any warnings (incomplete artifacts/tasks)
@@ -85,9 +86,9 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
+**Removed:** the completed active change and matching capability specs
 **Knowledge:** ✓ Current behavior merged
-**Specs:** ✓ Sync skipped; matching current-state specs removed
+**Specs:** ✓ Matching current-state specs removed
 
 All artifacts complete. All tasks complete.
 ```
@@ -96,7 +97,6 @@ All artifacts complete. All tasks complete.
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
 - Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- Never sync archived change specs into `openspec/specs/`; canonical knowledge is
-  the sole current-state source of truth.
+- Show a clear summary of what was removed and where durable knowledge lives
+- Never retain completed change artifacts or sync them into `openspec/specs/`;
+  canonical knowledge is the sole current-state source of truth.
