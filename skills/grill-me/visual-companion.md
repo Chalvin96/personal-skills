@@ -2,6 +2,19 @@
 
 Browser-based visual brainstorming companion for showing mockups, diagrams, and options.
 
+## Design-system contract
+
+Before starting a visual session, discover the target project's design system:
+agent instructions, canonical knowledge, token files, UI package, and adjacent
+screens. Record the relevant colors, typography, spacing, radii, components, and
+interaction patterns in the session's `content/design-system.css`. The server
+injects that stylesheet into every fragment screen.
+
+Use project tokens and existing component patterns in every mockup. The bundled
+frame styles are fallback infrastructure only; do not use them as a new visual
+language when the project already has a design system. If the repository has no
+design system, state that before showing a deliberately minimal wireframe.
+
 ## When to Use
 
 Decide per-question, not per-session. The test: **would the user understand this better by seeing it than reading it?**
@@ -44,6 +57,11 @@ scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
 Save `screen_dir` and `state_dir` from the response. With `--open`, the browser opens itself when you push the first screen — you don't need to ask the user to open it, but still share the URL as a fallback (headless/remote setups won't auto-open).
+
+Create `screen_dir/design-system.css` before the first screen whenever the
+project has design tokens or established UI patterns. It is automatically
+injected into fragment screens, so use the project's token names and component
+classes rather than recreating values in each mockup.
 
 **The URL contains a session key (`?key=…`).** The server rejects any request
 without it, so always give the user the **complete** URL from the `url` field —

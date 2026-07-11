@@ -260,8 +260,21 @@ function isFullDocument(html) {
   return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
+function designSystemCss() {
+  const stylesheet = path.join(CONTENT_DIR, 'design-system.css');
+  try {
+    return fs.readFileSync(stylesheet, 'utf-8');
+  } catch (e) {
+    return '';
+  }
+}
+
 function wrapInFrame(content) {
-  return renderBranding(frameTemplate).replace('<!-- CONTENT -->', content);
+  const css = designSystemCss();
+  const frame = css
+    ? frameTemplate.replace('</head>', `<style id="project-design-system">\n${css}\n</style></head>`)
+    : frameTemplate;
+  return renderBranding(frame).replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {
