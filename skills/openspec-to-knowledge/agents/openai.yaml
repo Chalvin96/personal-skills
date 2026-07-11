@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec to Knowledge"
+  short_description: "Fold verified OpenSpec changes into current knowledge."
+  default_prompt: "Turn this completed OpenSpec change into durable current-state knowledge."

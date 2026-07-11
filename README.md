@@ -41,7 +41,7 @@ folders in these locations:
 | `wayfinder` | Automatic | `gh`, OpenSpec when available | Chart large uncertain initiatives. |
 | `grill-me`, `writing-plans` | Automatic | OpenSpec | Resolve decisions and create plans. |
 | `openspec-explore` | Automatic | OpenSpec | Investigate without implementation. |
-| `openspec-propose`, `openspec-apply-change`, `openspec-sync-specs`, `openspec-archive-change` | Explicit command | OpenSpec | Propose, implement, synchronize, or archive a change. |
+| `openspec-propose`, `openspec-apply-change`, `openspec-sync-specs`, `openspec-to-knowledge`, `openspec-archive-change` | Explicit command | OpenSpec | Propose, implement, distill knowledge, synchronize, or archive a change. |
 
 Every skill falls back to the host's native question and task mechanisms. OpenSpec
 skills require the globally installed `openspec` command.
