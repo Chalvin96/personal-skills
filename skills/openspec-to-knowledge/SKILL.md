@@ -27,8 +27,10 @@ or task history.
 6. Run the knowledge validator and `openspec validate <name> --strict`. Fix
    every failure. Mark the knowledge-maintenance task complete only after both
    pass.
-7. Report the concepts changed, the validations run, and that the change is
-   ready for `openspec archive <name>`.
+7. Confirm every durable behavior from the change is represented in knowledge.
+   At archive, do not sync delta specs into `openspec/specs/`; knowledge is the
+   sole current-state source. Report the concepts changed, validations run, and
+   that the change is ready for knowledge-only archival.
 
 ## Completion criteria
 

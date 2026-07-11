@@ -1,11 +1,6 @@
 ---
 name: openspec-archive-change
-description: Archive a completed change in the experimental workflow. Requires the OpenSpec CLI. Use when the user wants to finalize and archive a change after implementation is complete.
-license: MIT
-metadata:
-  author: openspec
-  version: "1.0"
-  generatedBy: "1.5.0"
+description: Archive a completed OpenSpec change after merging durable behavior into canonical knowledge. Requires the OpenSpec CLI. Use when finalizing a verified change without retaining current-state specs under openspec/specs.
 ---
 
 Archive a completed change in the experimental workflow.
@@ -57,24 +52,21 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Enforce the knowledge gate**
 
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt.
+   Use `artifactPaths.specs.existingOutputPaths` to enumerate changed
+   capabilities. Read the completed implementation, change specs, and canonical
+   knowledge. Refuse archival until every durable behavior is captured in the
+   smallest relevant knowledge concepts and the knowledge validator passes.
 
-   **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
-   - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Show a combined summary before prompting
-
-   **Prompt options:**
-   - If changes needed: "Sync now (recommended)", "Archive without syncing"
-   - If already synced: "Archive now", "Sync anyway", "Cancel"
-
-   If the user chooses sync, delegate only when the host supports delegation; otherwise sync directly before archiving.
+   Do not sync delta specs to `openspec/specs/`. If a matching capability spec
+   already exists there, remove it only after its complete current behavior has
+   been merged into knowledge.
 
 5. **Perform the archive**
 
-   Run `openspec archive "<name>"` with the selected store flag when applicable.
+   Run `openspec archive "<name>" --skip-specs` with the selected store flag when
+   applicable. Validate OpenSpec and canonical knowledge after the move.
 
 6. **Display summary**
 
@@ -82,7 +74,8 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
    - Change name
    - Schema that was used
    - Archive location
-   - Whether specs were synced (if applicable)
+   - Knowledge concepts updated
+   - Capability specs removed or skipped
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -93,7 +86,8 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**Knowledge:** ✓ Current behavior merged
+**Specs:** ✓ Sync skipped; matching current-state specs removed
 
 All artifacts complete. All tasks complete.
 ```
@@ -104,5 +98,5 @@ All artifacts complete. All tasks complete.
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use openspec-sync-specs approach (agent-driven)
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- Never sync archived change specs into `openspec/specs/`; canonical knowledge is
+  the sole current-state source of truth.
