@@ -4,12 +4,12 @@ Browser-based visual brainstorming companion for showing mockups, diagrams, and 
 
 ## Design-system contract
 
-Before starting a visual session, read the target project's canonical
-design-system knowledge first (for example `knowledge/design-system/`). Verify it
-against token files, UI packages, and adjacent screens. Record the relevant
-colors, typography, spacing, radii, components, and interaction patterns in the
-session's `content/design-system.css`. The server injects that stylesheet into
-every fragment screen.
+Before starting a visual session, read the target project's canonical Markdown
+design-system knowledge first (for example `knowledge/design-system/`). It is the
+source of truth. Verify it against token files, UI packages, and adjacent screens.
+Translate only the relevant documented tokens into the session's disposable
+`content/design-system.css`; the server injects that adapter into every screen.
+Do not treat the adapter as a second design system or commit it as product CSS.
 
 Use project tokens and existing component patterns in every mockup. The bundled
 frame styles are fallback infrastructure only; do not use them as a new visual
@@ -60,9 +60,10 @@ scripts/start-server.sh --project-dir /path/to/project --open
 Save `screen_dir` and `state_dir` from the response. With `--open`, the browser opens itself when you push the first screen — you don't need to ask the user to open it, but still share the URL as a fallback (headless/remote setups won't auto-open).
 
 Create `screen_dir/design-system.css` before the first screen whenever the
-project has design tokens or established UI patterns. It is automatically
-injected into fragment screens, so use the project's token names and component
-classes rather than recreating values in each mockup.
+project has documented design tokens or established UI patterns. It is a
+temporary rendering adapter, automatically injected into screens; use the
+Markdown knowledge's token names and component classes rather than recreating
+values in each mockup.
 
 **The URL contains a session key (`?key=…`).** The server rejects any request
 without it, so always give the user the **complete** URL from the `url` field —
