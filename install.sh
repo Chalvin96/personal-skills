@@ -23,8 +23,13 @@ install_for() {
     fi
     rm -rf "$backup"
   done
-  rm -rf "$skills_home/_personal-shared"
-  cp -R "$shared_home" "$skills_home/_personal-shared"
+  temp="$(mktemp -d "$skills_home/._personal-shared.XXXXXX")"
+  cp -R "$shared_home/." "$temp/"
+  backup="$skills_home/._personal-shared.previous"
+  rm -rf "$backup"
+  [[ ! -e "$skills_home/_personal-shared" ]] || mv "$skills_home/_personal-shared" "$backup"
+  mv "$temp" "$skills_home/_personal-shared"
+  rm -rf "$backup"
   echo "Installed personal skills in $skills_home"
 }
 

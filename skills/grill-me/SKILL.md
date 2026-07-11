@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Stress-test a feature, non-trivial bug fix, architectural change, or UI design before implementation. Use when the user says "grill me", asks to pressure-test a design, or needs unresolved decisions captured in OpenSpec.
+description: Grill unresolved product, architecture, or UI decisions before implementation. Use when the user says "grill me" or asks to pressure-test a design.
 ---
 
 # OpenSpec Grill
@@ -67,7 +67,6 @@ and interaction patterns; do not invent a parallel visual language.
 
 ## Guardrails
 
-- Preserve accepted decisions in the repository's canonical current-state knowledge.
-- Keep exploratory notes in OpenSpec; update canonical knowledge only after implementation and verification.
+- Record accepted decisions in the OpenSpec proposal or design; update canonical knowledge only after implementation and verification.
 - If the user rejects the change, keep the rationale in the OpenSpec proposal
   only when it would prevent the same design from being re-proposed later.

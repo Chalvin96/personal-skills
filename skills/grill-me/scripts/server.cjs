@@ -102,14 +102,6 @@ const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'loc
 const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
-const SUPERPOWERS_VERSION = readSuperpowersVersion();
-const SUPERPOWERS_BRAND_IMAGE_URL = 'https://github.com/Chalvin96/personal-skills';
-const TELEMETRY_DISABLE_ENV_VARS = [
-  'SUPERPOWERS_DISABLE_TELEMETRY',
-  'DISABLE_TELEMETRY',
-  'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
-];
-const SUPERPOWERS_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key. The companion is reachable by any local browser tab
@@ -240,15 +232,7 @@ function escapeHtmlText(value) {
 }
 
 function brandMarkup() {
-  const version = escapeHtmlText(SUPERPOWERS_VERSION);
-  const text = SUPERPOWERS_TELEMETRY_DISABLED
-    ? 'Prime Radiant Personal Skills v' + version
-    : 'Personal Skills v' + version;
-  const logo = SUPERPOWERS_TELEMETRY_DISABLED
-    ? ''
-    : '<img class="brand-logo" src="' + SUPERPOWERS_BRAND_IMAGE_URL + '?v=' + encodeURIComponent(SUPERPOWERS_VERSION) + '" alt="Prime Radiant" referrerpolicy="no-referrer" decoding="async">';
-
-  return '<div class="brand"><a href="https://github.com/Chalvin96/personal-skills">' + logo + '<span class="brand-copy">' + text + '</span></a></div>';
+  return '<div class="brand"><span class="brand-copy">Visual companion</span></div>';
 }
 
 function renderBranding(html) {
@@ -275,6 +259,13 @@ function wrapInFrame(content) {
     ? frameTemplate.replace('</head>', `<style id="project-design-system">\n${css}\n</style></head>`)
     : frameTemplate;
   return renderBranding(frame).replace('<!-- CONTENT -->', content);
+}
+
+function injectDesignSystem(html) {
+  const css = designSystemCss();
+  if (!css) return html;
+  const injection = `<style id="project-design-system">\n${css}\n</style>`;
+  return html.includes('</head>') ? html.replace('</head>', injection + '</head>') : injection + html;
 }
 
 function getNewestScreen() {
@@ -419,7 +410,7 @@ function handleRequest(req, res) {
   } else if (req.method === 'GET' && pathname === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
-      ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
+      ? (raw => isFullDocument(raw) ? injectDesignSystem(raw) : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
       : waitingPage();
 
     if (html.includes('</body>')) {
@@ -473,6 +464,11 @@ function handleUpgrade(req, socket) {
 
   socket.on('data', (chunk) => {
     buffer = Buffer.concat([buffer, chunk]);
+    if (buffer.length > 1_048_576) {
+      socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
+      clients.delete(socket);
+      return;
+    }
     while (buffer.length > 0) {
       let result;
       try {

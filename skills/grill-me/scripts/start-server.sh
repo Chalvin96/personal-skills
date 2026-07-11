@@ -9,7 +9,7 @@
 #   --project-dir <path>  Store session files under <path>/.agent-skills/visual-companion/
 #                         instead of /tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
-#                         Use 0.0.0.0 in remote/containerized environments.
+#   --allow-insecure-remote  Acknowledge plaintext access for a non-loopback host.
 #   --url-host <host>     Hostname shown in returned URL JSON.
 #   --idle-timeout-minutes <n>  Shut down after n minutes idle (default 240 = 4h).
 #   --open                Auto-open the browser on the first screen (use only
@@ -26,6 +26,7 @@ FORCE_BACKGROUND="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
 IDLE_TIMEOUT_MINUTES=""
+ALLOW_INSECURE_REMOTE="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
@@ -48,6 +49,10 @@ while [[ $# -gt 0 ]]; do
       export BRAINSTORM_OPEN=1
       shift
       ;;
+    --allow-insecure-remote)
+      ALLOW_INSECURE_REMOTE="true"
+      shift
+      ;;
     --foreground|--no-daemon)
       FOREGROUND="true"
       shift
@@ -62,6 +67,11 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ "$BIND_HOST" != "127.0.0.1" && "$BIND_HOST" != "localhost" && "$ALLOW_INSECURE_REMOTE" != "true" ]]; then
+  echo '{"error":"Non-loopback hosting is plaintext. Use SSH forwarding or pass --allow-insecure-remote to acknowledge the risk."}'
+  exit 1
+fi
 
 if [[ -z "$URL_HOST" ]]; then
   if [[ "$BIND_HOST" == "127.0.0.1" || "$BIND_HOST" == "localhost" ]]; then
