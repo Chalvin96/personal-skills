@@ -38,3 +38,5 @@ skills require the globally installed `openspec` command.
 
 - `skills/wayfinder` is adapted from [Matt Pocock's Wayfinder skill](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder), licensed under [MIT](https://github.com/mattpocock/skills/blob/main/LICENSE).
 - `skills/openspec-*` are derived from [OpenSpec](https://github.com/Fission-AI/OpenSpec) generated workflow skills, available under [MIT](https://github.com/Fission-AI/OpenSpec/blob/main/LICENSE).
+- The UI visual-companion behavior in `skills/grill-me` is adapted from
+  [Superpowers brainstorming](https://github.com/obra/superpowers/tree/main/skills/brainstorming).

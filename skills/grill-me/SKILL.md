@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Stress-test a feature, non-trivial bug fix, or architectural change before implementation. Use when the user says "grill me", asks to pressure-test a design, or needs unresolved decisions captured in OpenSpec.
+description: Stress-test a feature, non-trivial bug fix, architectural change, or UI design before implementation. Use when the user says "grill me", asks to pressure-test a design, or needs unresolved decisions captured in OpenSpec.
 ---
 
 # OpenSpec Grill
@@ -41,6 +41,22 @@ implementation: do not edit production code or canonical current-state knowledge
 
 6. End by naming the OpenSpec change and recommending `$writing-plans` to make
    it apply-ready.
+
+## UI visual companion
+
+For UI work, offer a visual companion only when the next question would be
+clearer as a mockup, wireframe, flow, diagram, or side-by-side comparison than
+as prose. Make the offer its own message and wait for the answer:
+
+> This next decision may be clearer visually. I can show mockups, diagrams, or
+> comparisons as we go. Want to use the visual companion?
+
+If the user accepts and the host exposes a browser-based visual companion, open
+it for the first visual question. Otherwise, use the best available visual
+artifact (for example, an image, diagram, or text wireframe). Decide per
+question whether the visual companion helps; keep requirements, trade-offs, and
+other text-first questions in the normal conversation. If the user declines,
+continue text-only and do not offer again unless they raise it.
 
 ## Guardrails
 
