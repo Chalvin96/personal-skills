@@ -1,6 +1,18 @@
 # Personal Skills
 
-Reusable Codex skills for engineering discovery and OpenSpec change management.
+This is a personal engineering workflow that combines Matt Pocock's Wayfinder
+with OpenSpec.
+
+- **Wayfinder** maps large, uncertain work as a small set of GitHub decision
+  tickets. It resolves the unknowns without pretending implementation is ready.
+- **OpenSpec** starts when the route is clear. It records the proposal, design,
+  behavioral requirements, tasks, implementation progress, and archive.
+- **Knowledge** receives only verified, durable current-state facts after the
+  change is implemented—not planning history.
+
+The result is a deliberate handoff: `wayfinder` for discovery → `grill-me` for
+pressure-testing decisions → OpenSpec for planned and implemented change. The
+skills favor mechanical checks wherever a convention can be made executable.
 
 Clone the private repository, then install every skill globally for Codex, Claude
 Code, OpenCode, and Droid/Factory:
