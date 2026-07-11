@@ -1,9 +1,9 @@
 ---
 name: openspec-archive-change
-description: Finalize a completed OpenSpec change by merging durable behavior and rationale into canonical knowledge, then removing the change artifacts and matching specs. Use when finishing verified work without retaining OpenSpec process history.
+description: Archive a completed OpenSpec change after consolidating all durable behavior and rationale into affected OKF knowledge concepts. Use when finalizing verified work while retaining dated process evidence but no durable openspec/specs copy.
 ---
 
-Finalize a completed change without retaining process history.
+Archive a completed change after comprehensive OKF consolidation.
 
 If the work is in a registered OpenSpec store, read [store selection](../_personal-shared/openspec-store-selection.md) before running commands.
 
@@ -59,22 +59,25 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
    knowledge. Refuse archival until every durable behavior is captured in the
    smallest relevant knowledge concepts and the knowledge validator passes.
 
-   Do not sync delta specs to `openspec/specs/`. Capture important rationale in
-   the relevant concept or decision record. If a matching capability spec already
-   exists, remove it only after its complete current behavior is in knowledge.
+   Audit product, domain, architecture, platform, data, operations, decisions,
+   and references for affected current-state concepts. Do not sync delta specs to
+   `openspec/specs/`. Capture important rationale in the relevant concept or
+   decision record. If a matching capability spec already exists, remove it only
+   after its complete current behavior is in knowledge.
 
-5. **Remove completed artifacts**
+5. **Archive the completed change**
 
-   Remove `openspec/changes/<name>/` and matching capability directories under
-   `openspec/specs/`. Do not create or retain a dated archive directory. Validate
-   OpenSpec and canonical knowledge after removal.
+   Run `openspec archive "<name>" --skip-specs`. Retain the resulting dated
+   directory under `openspec/changes/archive/` as process evidence. Remove
+   matching capability directories under `openspec/specs/`, then validate
+   OpenSpec and canonical knowledge.
 
 6. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
-   - Removed change path
+   - Dated archive path
    - Knowledge concepts updated
    - Capability specs removed or skipped
    - Note about any warnings (incomplete artifacts/tasks)
@@ -86,7 +89,7 @@ If the work is in a registered OpenSpec store, read [store selection](../_person
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Removed:** the completed active change and matching capability specs
+**Archived to:** the dated path under `openspec/changes/archive/`
 **Knowledge:** ✓ Current behavior merged
 **Specs:** ✓ Matching current-state specs removed
 
@@ -97,6 +100,7 @@ All artifacts complete. All tasks complete.
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
 - Don't block archive on warnings - just inform and confirm
-- Show a clear summary of what was removed and where durable knowledge lives
-- Never retain completed change artifacts or sync them into `openspec/specs/`;
-  canonical knowledge is the sole current-state source of truth.
+- Preserve the dated OpenSpec archive as evidence
+- Show a clear summary of the archive and every knowledge concept updated
+- Never sync completed change specs into `openspec/specs/`; retain only the dated
+  archive as evidence, while canonical knowledge is the current-state truth.

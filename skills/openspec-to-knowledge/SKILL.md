@@ -18,9 +18,10 @@ or task history.
 3. Extract only durable facts that are true in the final code: behavior,
    contracts, invariants, architecture boundaries, operational procedures, data
    shape, and decisions that future work must know.
-4. Update the smallest affected knowledge concepts. Preserve their local format,
-   indexes, links, timestamps, and change log. Remove stale statements found in
-   the same scope.
+4. Audit every affected OKF area—product, domain, architecture, platform, data,
+   operations, decisions, and references—and update each concept whose current
+   truth changed. Preserve local format, indexes, links, timestamps, and the
+   change log. Remove stale statements found in the same scope.
 5. Exclude temporary alternatives, rejected options, task checklists, rollout
    narration, and implementation history. Those remain in OpenSpec archive
    artifacts.
@@ -28,9 +29,9 @@ or task history.
    every failure. Mark the knowledge-maintenance task complete only after both
    pass.
 7. Confirm every durable behavior and important rationale from the change is
-   represented in knowledge. Do not sync delta specs into `openspec/specs/`;
-   knowledge is the sole current-state source. Report the concepts changed,
-   validations run, and that the completed OpenSpec artifacts can be removed.
+   represented across the affected knowledge concepts. Do not sync delta specs
+   into `openspec/specs/`; knowledge is the sole current-state source. Report the
+   concepts changed, validations run, and that the change is ready for archival.
 
 ## Completion criteria
 
