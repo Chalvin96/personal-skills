@@ -26,8 +26,10 @@ CONFIG="$REPO_ROOT/.local-ci.json"
 SET_STATUS=0
 [ "${1:-}" = "--status" ] && SET_STATUS=1
 
-# --- guards: clean tree, real PR, HEAD == PR head ---------------------------------
-[ -z "$(git status --porcelain)" ] || fail "working tree is dirty — commit/stash first (a status would attach to a commit that isn't what you tested)"
+# --- guards: no uncommitted TRACKED changes, real PR, HEAD == PR head -------------
+# Untracked files are ignored: CI checks out the pushed commit, so they aren't part
+# of what runs. Modified/staged tracked files mean HEAD doesn't reflect the tree.
+[ -z "$(git status --porcelain --untracked-files=no)" ] || fail "uncommitted tracked changes — commit/stash first (a status would attach to a commit that isn't what you tested)"
 git symbolic-ref -q HEAD >/dev/null || fail "detached HEAD is not supported"
 SHA="$(git rev-parse HEAD)"
 SHORT="$(git rev-parse --short HEAD)"
