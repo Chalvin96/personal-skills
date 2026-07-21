@@ -42,6 +42,7 @@ folders in these locations:
 | `grill-me`, `writing-plans` | Automatic | OpenSpec | Resolve decisions and create plans. |
 | `openspec-explore` | Automatic | OpenSpec | Investigate without implementation. |
 | `openspec-propose`, `openspec-apply-change`, `openspec-sync-specs`, `openspec-archive-change` | Explicit command | OpenSpec | Propose, implement, synchronize, or archive a change. |
+| `local-ci` | Explicit command | `gh`, `git`, `python3`, a repo `.local-ci.json` | Run a PR's CI checks locally when Actions is down; post a checklist and set commit statuses. |
 
 Every skill falls back to the host's native question and task mechanisms. OpenSpec
 skills require the globally installed `openspec` command.
