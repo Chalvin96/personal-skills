@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grilling"
+  short_description: "Relentless design-tree interview, worked in rounds."
+  default_prompt: "Grill me on this until the frontier is empty."
