@@ -18,7 +18,7 @@ artifacts:
     generates: "tickets/**/*.md"
     description: Local Wayfinder implementation-decision tickets
     template: ticket.md
-    instruction: Create only material decision tickets. tickets/index.md owns status.
+    instruction: Create only material decision tickets, each typed research/prototype/grilling/task. tickets/index.md owns destination, status, fog, and out of scope.
     requires: [proposal, specs]
   - id: trd
     generates: trd.md

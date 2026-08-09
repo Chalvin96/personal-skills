@@ -1,5 +1,6 @@
 ---
 id: D-001
+type: grilling
 status: OPEN
 blocking: true
 depends_on: []

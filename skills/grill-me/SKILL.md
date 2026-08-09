@@ -1,18 +1,22 @@
 ---
 name: grill-me
-description: Run the Superpowers brainstorming/grilling loop for unresolved product, architecture, or UI decisions before implementation. Use when the user says "grill me", asks to pressure-test a design, or a Wayfinder UI ticket needs human decisions and visual companion support.
+description: Run a grilling session for unresolved product, architecture, or UI decisions and capture them in OpenSpec before implementation. Use when the user says "grill me", asks to pressure-test a design, or a Wayfinder ticket needs human decisions and visual companion support.
 ---
 
 # OpenSpec Grill
 
-Resolve one decision at a time before implementation. This is exploration, not
+Resolve the open decisions before implementation. This is exploration, not
 implementation: do not edit production code or canonical current-state knowledge while facts remain provisional.
+
+Run the interview itself with `$grilling` — the design tree, rounds, frontier,
+and question format come from there. This skill adds the OpenSpec framing around
+it.
 
 ## Workflow
 
 1. Read the repository's canonical knowledge source and inspect code for questions that
-   can be answered from the repository. Do not ask the user for discoverable
-   facts.
+   can be answered from the repository. Finding facts is your job, never the
+   user's: dispatch a subagent rather than asking for anything discoverable.
 2. Decide whether the work needs OpenSpec. Use it for features, non-trivial bug
    fixes, and architectural changes; skip it for isolated typo/config changes.
 3. For OpenSpec work, locate a named active change with:
@@ -28,8 +32,9 @@ implementation: do not edit production code or canonical current-state knowledge
    openspec new change <name>
    ```
 
-4. Ask exactly one question at a time. Give a recommended answer and its
-   trade-off. Follow the answer down the next unresolved branch.
+4. Ask the whole frontier in one round, per `$grilling`: number each question,
+   give a recommended answer and its trade-off, then wait. Recompute the
+   frontier from the answers and ask the next round.
 5. Once the change is understood, use OpenSpec's current instructions to write
    the proposal and design. Capture only settled decisions; keep behavioral
    requirements and tasks for `$writing-plans`.
