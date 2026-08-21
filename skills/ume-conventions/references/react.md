@@ -18,6 +18,15 @@ Load this extension with `typescript.md` when the project uses React.
 - Use stable, genuinely unique keys for lists. Do not use array indexes when items can reorder, insert, or delete.
 - Keep public components and hooks before module-private helpers where practical.
 
+When repository evidence shows a Vite/TanStack-style frontend, keep the feature
+flow legible: a plain API wrapper owns transport, a query or mutation hook owns
+server-state behavior, and a page or component owns rendering. Keep file-based
+routes thin and do not edit generated route trees directly.
+
+Keep server state in the query library, URL state in router search parameters,
+and page-local interaction state local. Do not add global state without a real
+shared consumer.
+
 ## Hooks and effects
 
 - Keep hooks unconditional and preserve complete dependency arrays.

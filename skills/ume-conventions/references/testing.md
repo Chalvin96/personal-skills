@@ -137,17 +137,23 @@ red-team testing, and field monitoring when the risk requires it.
 
 ## Framework notes
 
-- **Python:** name tests by behavior and failure mode. Use controlled clocks,
+- **Python:** name tests by behavior and failure mode. When the repository uses
+  the stricter house style, use
+  `test_<what>_given_<scenario>_expect_<result>` for new or renamed tests. Use controlled clocks,
   explicit fixtures, and scoped patches. Test exceptions and external-call
   failures, not only successful return values.
 - **FastAPI:** test the HTTP contract, dependency and object authorization,
   validation, status and response models, dependency failures, timeouts, and
-  background side effects. Use `TestClient` for normal endpoint tests and an async
-  test boundary when the code under test requires it.
+  background side effects. Use factories and savepoint-isolated sessions when
+  the repository provides them. Use `TestClient` for normal endpoint tests and
+  an async test boundary when the code under test requires it. Test concurrency
+  with independent sessions and explicit synchronization when a database race
+  is part of the contract.
 - **Django:** use the Django client for route behavior. Check permissions and
   serializer disclosure. Use transaction-aware tests when transaction behavior,
   locking, or commit hooks are part of the change.
-- **TypeScript and React:** prefer user-visible behavior, semantic roles, labels,
+- **TypeScript and React:** name new static Vitest tests with the repository's
+  behavior pattern when it has one; prefer user-visible behavior, semantic roles, labels,
   stable contracts, and explicit async states. Avoid tests that assert component
   instances, private helpers, CSS structure, or hook call order.
 

@@ -34,6 +34,18 @@ Inspect every untracked source file directly as an addition. Do not concatenate
 separate staged and unstaged diffs. Do not create an aggregate-diff helper or
 write the review input to `diff.txt`.
 
+### Stacked PRs
+
+For a GitHub PR, inspect its body and base/head refs for a declared stack layer
+or dependency. Record the layer number, parent PR or branch, and the requested
+review scope. Review the requested PR's merge-base diff by default. Use later
+stack refs only to verify that the layer does not depend on code that is added
+later in the stack; do not include later-layer code in the requested diff.
+
+Review the whole stack only when the user asks for it. Resolve the parent chain,
+review each layer against its declared base, and also check the cumulative diff
+from the stack root. Report which scope each finding belongs to.
+
 Review hand-written source. Exclude generated files only when the repository
 identifies them as generated. A generated migration may still require review of
 the model change, deploy safety, and compatibility.

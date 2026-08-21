@@ -14,25 +14,19 @@ The result is a deliberate handoff: `wayfinder` for discovery → `grill-me` for
 pressure-testing decisions → OpenSpec for planned and implemented change. The
 skills favor mechanical checks wherever a convention can be made executable.
 
-Clone the private repository, then install every skill globally for Codex, Claude
-Code, OpenCode, and Droid/Factory:
+Install every skill globally for supported agents with `npx skills`:
 
 ```bash
-gh repo clone Chalvin96/personal-skills
-cd personal-skills
-./setup.sh
+npx skills add Chalvin96/personal-skills --global --all
 ```
 
-`setup.sh` installs the OpenSpec CLI globally. Initialize it inside a project
-with `openspec init`.
+OpenSpec is optional. If you use the OpenSpec workflow, install its CLI
+separately and initialize it inside a project:
 
-Re-run `./setup.sh` after pulling updates; it replaces only the personal skill
-folders in these locations:
-
-- Codex: `$CODEX_HOME/skills` (default `~/.codex/skills`)
-- Claude Code: `~/.claude/skills`
-- OpenCode: `~/.config/opencode/skills`
-- Droid/Factory: `~/.factory/skills`
+```bash
+npm install --global @fission-ai/openspec
+openspec init
+```
 
 ## Skills
 

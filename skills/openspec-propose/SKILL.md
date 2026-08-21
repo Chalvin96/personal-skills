@@ -19,7 +19,7 @@ When ready to implement, run /opsx:apply
 
 ---
 
-If the work is in a registered OpenSpec store, read [store selection](../_personal-shared/openspec-store-selection.md) before running commands.
+If the work is in a registered OpenSpec store, read [store selection](../openspec-store-selection/SKILL.md) before running commands.
 
 **Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
 

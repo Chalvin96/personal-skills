@@ -15,9 +15,21 @@ Use names that reduce the next reader's memory load. The Jane Street principles 
 1. Reuse an existing name when the concept already exists. A duplicate implementation is also a duplicate name.
 2. Make names carry information. Prefer descriptive names inside code. Mnemonic names are acceptable only when the project has already paid for them and uses them consistently.
 3. Spend longer names on concepts that are rare or far from their definition. Frequent local values can be shorter when their meaning is clear at the call site.
-4. Make the name promise the behavior. `get_` reads, `update_` writes, `sync_` pushes state outward, and `is_`/`has_` returns a boolean unless the project has an established different contract.
+4. Make the name promise the behavior. `update_` writes, `sync_` pushes state
+   outward, and `is_`/`has_` returns a boolean. Use `get_` only when the
+   repository has an established reason to name the read action; prefer the
+   returned value for a simple accessor.
 5. Avoid unrelated rename churn. Rename when the current name is misleading, unsafe, or part of the requested change; do not rename only for taste.
 6. Use one term for one concept. Do not rotate synonyms for style.
+7. Name accessors for the value they return. Avoid vague verbs such as
+   `handle_`, `process_`, `manage_`, and `do_` when the returned value gives a
+   better name.
+8. Make failure behavior visible: use `find_` for an optional result and
+   `_or_raise` for a value-or-exception helper. A name such as `authorize_`
+   should not hide an accessor that raises instead of granting anything.
+9. Prefer unabbreviated names unless the repository has an established domain
+   abbreviation. Make illegal states unrepresentable when the name alone
+   cannot express an important invariant.
 
 ## Language rules
 

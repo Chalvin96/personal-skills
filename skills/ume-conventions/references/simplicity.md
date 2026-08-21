@@ -10,6 +10,10 @@ status: active
 
 Be a lazy senior developer: remove work that does not need to exist, but understand the full problem before simplifying it.
 
+Keep code terse and clear. Comments are the exception, not the default. A
+comment earns its place only when deleting the line it guards would make the
+code look correct.
+
 ## Ponytail ladder
 
 Stop at the first rung that solves the real problem:

@@ -19,11 +19,25 @@ These rules apply to Python regardless of web framework.
 - Give external network calls an explicit timeout and bounded retry behavior.
 - Avoid mutable default arguments and hidden global state.
 - Use a bare `*` in a function signature when parameters should be keyword-only, especially when positional order would be unclear or future optional parameters should not break callers. Use `*args` or `**kwargs` only when arbitrary arguments are part of the contract; prefer explicit parameters otherwise.
+- Represent expected domain outcomes with explicit typed values when callers must
+  distinguish them. Reserve exceptions for failure paths, and use a typed
+  project exception hierarchy instead of several boolean or `None` sentinels.
 
 ## Structure and naming
 
 - Put public module functions before private helpers.
 - Inside a class, put the constructor and public methods before `_private` helpers. Keep private helpers at the bottom unless a framework lifecycle requires another order.
+- Name a function for the value it returns, not for a vague action. Avoid
+  `get_`, `handle_`, `process_`, `manage_`, and `do_` when a value name is
+  clearer. Use question- or adjective-shaped names for predicates.
+- Make exception behavior visible: use `_or_raise` for a value-or-exception
+  helper and `find_` for a helper that may return `None`. Do not hide a raise
+  behind an innocuous accessor name.
+- Prefer small composable functions, unabbreviated names, and clear control
+  flow over cleverness or needless mutation.
+- Encode stable invariants in types, enums, dataclasses, relationships, or
+  database constraints when possible. Do not use several sentinel values for
+  distinct outcomes when a typed result or exception can make them explicit.
 - Keep one responsibility per function. Extract only when the new boundary makes behavior easier to understand or test.
 - Prefer the standard library and existing project utilities before adding a dependency.
 
