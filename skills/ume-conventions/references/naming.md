@@ -35,7 +35,7 @@ Use names that reduce the next reader's memory load. The Jane Street principles 
 
 | Language | Convention |
 | --- | --- |
-| Python | `snake_case` values and functions; `PascalCase` classes; `_private` helpers; `UPPER_SNAKE_CASE` constants only when module-level constants are justified. |
+| Python | `snake_case` values and functions; `PascalCase` classes; single-leading-underscore helpers are file-local; `UPPER_SNAKE_CASE` constants only when module-level constants are justified. |
 | TypeScript | `camelCase` values and functions; `PascalCase` classes, components, and types; `UPPER_SNAKE_CASE` constants only for true constants. |
 | React | Component names are nouns; event props use `on<Event>`; coordinating handlers use `handle<Event>`; imperative actions use `action<DoSomething>` when that distinction is useful. |
 | Collections | Use plural nouns for collections and `valuesByKey`/`values_by_key` for maps. |

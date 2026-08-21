@@ -19,6 +19,11 @@ These rules apply to Python regardless of web framework.
 - Give external network calls an explicit timeout and bounded retry behavior.
 - Avoid mutable default arguments and hidden global state.
 - Use a bare `*` in a function signature when parameters should be keyword-only, especially when positional order would be unclear or future optional parameters should not break callers. Use `*args` or `**kwargs` only when arbitrary arguments are part of the contract; prefer explicit parameters otherwise.
+- Treat a single leading underscore as file-local implementation detail. Do not
+  import or call `_private` functions or methods from another module. If code
+  needs a cross-module caller, give it a public name without the underscore.
+  Dunder protocol methods such as `__init__` are language or framework
+  exceptions.
 - Represent expected domain outcomes with explicit typed values when callers must
   distinguish them. Reserve exceptions for failure paths, and use a typed
   project exception hierarchy instead of several boolean or `None` sentinels.
