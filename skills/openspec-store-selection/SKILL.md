@@ -1,3 +1,8 @@
+---
+name: openspec-store-selection
+description: Select the registered OpenSpec store before running OpenSpec commands.
+---
+
 # OpenSpec store selection
 
 If the work is in a registered OpenSpec store, run `openspec store list --json`,

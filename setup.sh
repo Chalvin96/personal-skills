@@ -5,7 +5,7 @@ usage() {
   cat <<'EOF'
 Usage: ./setup.sh
 
-Installs these personal skills into CODEX_HOME and installs the OpenSpec CLI globally.
+Installs the OpenSpec CLI globally. Install personal skills with `npx skills`.
 EOF
 }
 
@@ -28,5 +28,4 @@ require() {
 require npm
 
 npm install --global @fission-ai/openspec
-"$(dirname "$0")/install.sh"
-echo "Skills and OpenSpec are installed globally. Run 'openspec init' in a project to initialize it."
+echo "OpenSpec is installed globally. Run 'openspec init' in a project to initialize it."

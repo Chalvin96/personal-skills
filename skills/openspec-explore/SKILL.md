@@ -15,7 +15,7 @@ form hypotheses; distinguish facts from assumptions; and surface the next
 decision. Do not modify application code.
 
 If the work is in a registered OpenSpec store, read
-[store selection](../_personal-shared/openspec-store-selection.md) before running
+[store selection](../openspec-store-selection/SKILL.md) before running
 commands.
 
 1. Establish the question, affected area, and whether an active change exists.

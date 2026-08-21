@@ -10,7 +10,7 @@ metadata:
 
 Implement tasks from an OpenSpec change.
 
-If the work is in a registered OpenSpec store, read [store selection](../_personal-shared/openspec-store-selection.md) before running commands.
+If the work is in a registered OpenSpec store, read [store selection](../openspec-store-selection/SKILL.md) before running commands.
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
