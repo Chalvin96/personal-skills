@@ -4,6 +4,10 @@ Use one finding per block. Keep three blocks in this order: header, assessment,
 and fix. Separate the blocks with `---` and keep a blank line on both sides of
 each separator.
 
+For terminal output, include the file and line in the header. For an inline PR
+comment, omit the location because GitHub shows the file and line beside the
+comment.
+
 ````markdown
 **warning** · `security.md` · `app/routes.py:42` → missing authorization at the route boundary
 

@@ -1,6 +1,6 @@
 ---
 name: ume-review
-description: Review PRs, branches, commit ranges, and working trees for grounded defects and Ume convention violations, then write ASD-STE100-informed findings. Use for code review; use an implementation skill for fixes.
+description: Review PRs, branches, commit ranges, and working trees for grounded defects and Ume convention violations, write ASD-STE100-informed findings, and post PR reviews to GitHub. Use for code review; use an implementation skill for fixes.
 ---
 
 # Ume Review
@@ -16,8 +16,8 @@ Use these admission gates:
 - **Spec gap:** changed behavior plus an explicit requirement that is missing or contradicted.
 
 Drop preferences, ungrounded claims, and theoretical risks without a plausible
-trigger. Keep the review read-only. If the user asks for a fix, use an
-implementation skill.
+trigger. Do not edit the target source. Posting the finished review to a PR is
+part of this skill. If the user asks for a fix, use an implementation skill.
 
 ## Pass 1 — mechanical checks
 
@@ -162,11 +162,16 @@ Then include:
 5. questions about invisible intent or unresolved requirements;
 6. one verdict: `Approve`, `Approve with notes`, `Request changes`, or `Discuss`.
 
-Use `Request changes` only for confirmed critical or warning findings. Use
-`Discuss` when the result depends on an unresolved product or architecture
-decision. State checks that did not run, including `not run — not authorized`,
-`not run — untrusted source`, and `not applicable`.
+Use `Request changes` only for confirmed critical or warning findings and only
+when the authenticated GitHub user is not the PR author. GitHub rejects a
+self-authored `Request changes` review; submit `COMMENT` instead and state that
+limitation. Use `Discuss` when the result depends on an unresolved product or
+architecture decision. State checks that did not run, including `not run — not
+authorized`, `not run — untrusted source`, and `not applicable`.
 
-The normal review produces terminal output. If the user explicitly asks for a PR
-comment, prepare or post only the requested comments. Never post automatically
-because a PR was supplied.
+For a PR target, read [posting.md](references/posting.md) and post the finished
+review after the ASD-STE100 pass. Post one inline comment per finding. Use a
+general PR comment when no changed line can anchor the finding. Do not post
+unresolved candidates, questions, or secrets. If there are no findings, post a
+`No findings.` review. A working-tree review has terminal output only. Verify
+the posted review URL and state in the handoff.
