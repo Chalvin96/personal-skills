@@ -42,9 +42,13 @@ folders in these locations:
 | `grill-me`, `writing-plans` | Automatic | OpenSpec | Resolve decisions and create plans. |
 | `openspec-explore` | Automatic | OpenSpec | Investigate without implementation. |
 | `openspec-propose`, `openspec-apply-change`, `openspec-sync-specs`, `openspec-to-knowledge`, `openspec-archive-change` | Explicit command | OpenSpec | Propose, implement, distill knowledge, synchronize, or archive a change. |
+| `ume-conventions` | Automatic | None | Apply Python, FastAPI, Django, TypeScript, React, testing, simplicity, naming, and security conventions. |
+| `ume-review` | Automatic | None | Review changes and test evidence against the conventions, trace real risks, and rewrite findings in ASD-STE100-informed English. |
 
 Every skill falls back to the host's native question and task mechanisms. OpenSpec
 skills require the globally installed `openspec` command.
+
+Reviews are local and read-only by default; PR posting requires an explicit request.
 
 ## Attribution
 
