@@ -20,7 +20,8 @@ Load this extension with `python.md`. These are framework rules, not universal P
 - Put every database mutation—create, update, delete, and state transition—behind
   an application or domain service. The service owns write behavior, domain
   invariants, and the transaction boundary. Routes and read paths must not
-  commit writes as a side effect.
+  commit writes as a side effect. **Mechanical (`UME-FAPI001`):** direct
+  database mutation calls in FastAPI-style route functions are rejected.
 - Treat CQRS as a simple read/write boundary, not as a reason to add a framework.
   Read-only queries may live wherever they are clearest: in a route for a small
   query, or in a query module, repository, or service for a larger one. A query
@@ -36,7 +37,9 @@ Load this extension with `python.md`. These are framework rules, not universal P
 ## Async and side effects
 
 - Do not call blocking I/O or CPU-heavy work directly from an async route. Use an async client, a worker, or an explicit thread boundary.
-- Give outbound HTTP calls a timeout, bounded retry policy, and cancellation behavior.
+- Give outbound HTTP calls a timeout, bounded retry policy, and cancellation
+  behavior. Known direct calls without `timeout=` are checked mechanically as
+  `UME-NET001`; client-wrapper configuration still needs model review.
 - Keep transaction scope clear. Do not start a transaction around unrelated network calls.
 - Make background work safe to retry. Pass stable IDs or serializable input, then re-read current state in the worker.
 - Use an idempotency key or a guarded state transition when two requests can perform the same side effect.
@@ -49,8 +52,12 @@ Load this extension with `python.md`. These are framework rules, not universal P
   naming conventions instead of introducing a second model base.
 - Use `select()` with `Session.scalars()` or `Session.execute()` for reads, and
   `Session.get()` for primary-key lookup. With `AsyncSession`, await the
-  corresponding operations. Do not use `session.query()`, `Query`, or other
-  legacy SQLAlchemy 1.x query patterns in new code.
+  corresponding operations. **Mechanical (`UME-SA001`):** Do not use
+  `session.query()`, `Query`, or other legacy SQLAlchemy 1.x query patterns in
+  new code.
+- **Mechanical (`UME-SA002`):** New typed models must not use imported
+  SQLAlchemy `Column` or `declarative_base()` constructors. Use the repository's
+  typed SQLAlchemy 2.x base, `Mapped[...]`, and `mapped_column()`.
 - Make relationship loading explicit for collection and list endpoints. Use
   `selectinload()` or `joinedload()` when appropriate, and check for accidental
   lazy-loading and N+1 queries. Do not load a large collection implicitly from
@@ -81,10 +88,14 @@ clients/<vendor>/
 - `manager.py` is the application-facing vendor layer. It calls `api.py`
   methods, coordinates provider calls, normalizes provider responses, and maps
   provider failures to application-level errors. It must not construct the
-  HTTP/SDK client or duplicate endpoint and header details.
+  HTTP/SDK client or duplicate endpoint and header details. Mechanical checks
+  `UME-FAPI003` and `UME-FAPI004` reject transport imports and local transaction
+  operations in this file.
 - A manager may return data needed by a write service, but it must not commit
   local database changes. The service remains responsible for local mutations
   and transaction rules.
+- **Mechanical (`UME-FAPI002`):** Every detected `clients/<vendor>/` client
+  folder must contain `api.py`, `manager.py`, and `config.py`.
 - Wire `config.py` → `api.py` → `manager.py` through a dependency/provider and
   inject the manager into routes or services. Tests should replace the API or
   manager with a fake; they must not call a live vendor by default.

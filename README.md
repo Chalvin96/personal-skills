@@ -36,14 +36,17 @@ openspec init
 | `grill-me`, `writing-plans` | Automatic | OpenSpec | Resolve decisions and create plans. |
 | `openspec-explore` | Automatic | OpenSpec | Investigate without implementation. |
 | `openspec-propose`, `openspec-apply-change`, `openspec-sync-specs`, `openspec-to-knowledge`, `openspec-archive-change` | Explicit command | OpenSpec | Propose, implement, distill knowledge, synchronize, or archive a change. |
-| `ume-conventions` | Automatic | None | Apply Python, FastAPI, Django, TypeScript, React, testing, simplicity, naming, and security conventions. |
-| `ume-review` | Automatic | `gh` for PR posting | Review changes and test evidence against the conventions, trace real risks, rewrite findings in ASD-STE100-informed English, and post PR reviews. |
+| `ume-conventions` | Automatic | None | Route implementation and review work to the canonical Python, FastAPI, Django, TypeScript, React, testing, simplicity, naming, and security references. |
+| `ume-review` | Automatic | `gh` for PR posting | Review changes and test evidence against the conventions, trace real risks, and post PR reviews after explicit authorization. |
 
 Every skill falls back to the host's native question and task mechanisms. OpenSpec
 skills require the globally installed `openspec` command.
 
-Reviews do not edit target source. PR targets post the finished review; working-tree
-reviews produce terminal output.
+Reviews do not edit target source. PR targets post the finished review only after
+explicit authorization; working-tree reviews produce terminal output.
+
+`ume-conventions` is a thin router. Its `references/` files are the canonical
+rules that future implementation and review skills can reuse directly.
 
 ## Attribution
 

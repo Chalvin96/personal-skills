@@ -1,50 +1,61 @@
 ---
 name: ume-review
-description: Review PRs, branches, commit ranges, and working trees for grounded defects and Ume convention violations, write ASD-STE100-informed findings, and post PR reviews to GitHub. Use for code review; use an implementation skill for fixes.
+description: Review PRs, branches, commit ranges, and working trees for grounded defects and Ume convention violations, prepare clear findings, and post PR reviews only after explicit authorization. Use for code review; use an implementation skill for fixes.
 ---
 
 # Ume Review
 
 Review the change as a careful maintainer. Every finding must be grounded in the
-changed code, the repository, or an explicit specification. `No findings.` is a
+changed code, the repository, or an explicit specification. "No findings." is a
 valid result.
 
 Use these admission gates:
 
-- **Defect:** changed code plus a concrete trigger and production impact.
-- **House rule:** changed code plus the cited Ume rule.
-- **Spec gap:** changed behavior plus an explicit requirement that is missing or contradicted.
+- Defect: changed code plus a concrete trigger and production impact.
+- House rule: changed code plus the cited Ume rule.
+- Spec gap: changed behavior plus an explicit requirement that is missing or contradicted.
 
 Drop preferences, ungrounded claims, and theoretical risks without a plausible
-trigger. Do not edit the target source. Posting the finished review to a PR is
-part of this skill. If the user asks for a fix, use an implementation skill.
+trigger. Do not edit the target source. Post to GitHub only after the user
+explicitly authorizes posting; otherwise keep the review in the terminal. If the
+user asks for a fix, use an implementation skill.
+
+## Evidence ledger
+
+Keep a review ledger in the review notes. Record:
+
+- target provenance, base and head, diff source, trust status, and generated-file exclusions;
+- one convention-reference entry for every changed source file;
+- one entry for every applicable risk surface: "traced", "not applicable", or "skipped — reason";
+- every delegated lane as "completed", "fallback — main reviewer", "skipped — reason", or "not applicable".
+
+A pass is incomplete until every item in its ledger has a status and evidence.
 
 ## Pass 1 — mechanical checks
 
 ### Get the diff
 
-Accept a PR, branch, commit range, or working tree. If no target is supplied,
-ask what to review. Do not assume `main` or `master`; resolve the PR base or
-ask. For a branch, use the merge-base diff:
-`git diff --no-color <base>...HEAD`. For a PR, use `gh pr diff <number>` or the
-resolved merge-base diff. Do not use `<base>..HEAD` as the author diff.
+Accept a PR, branch, explicit commit range, or working tree. If no target is
+supplied, ask what to review. Do not assume main or master; resolve the PR base
+or ask.
 
-For a working tree, use `git diff --no-color HEAD` and `git status --short`.
+- For a branch, use its merge base: git diff --no-color <base>...HEAD.
+- For a PR, use gh pr diff <number> or the resolved merge-base diff.
+- For a commit range, require literal endpoints OLD and NEW (or an explicit
+  OLD..NEW) and compare them with git diff --no-color OLD NEW. Do not infer a
+  base, replace an endpoint with HEAD, or use merge-base semantics.
+- For a working tree, use git diff --no-color HEAD and git status --short.
+
 Inspect every untracked source file directly as an addition. Do not concatenate
 separate staged and unstaged diffs. Do not create an aggregate-diff helper or
-write the review input to `diff.txt`.
+write the review input to diff.txt.
 
 ### Stacked PRs
 
-For a GitHub PR, inspect its body and base/head refs for a declared stack layer
-or dependency. Record the layer number, parent PR or branch, and the requested
-review scope. Review the requested PR's merge-base diff by default. Use later
-stack refs only to verify that the layer does not depend on code that is added
-later in the stack; do not include later-layer code in the requested diff.
-
-Review the whole stack only when the user asks for it. Resolve the parent chain,
-review each layer against its declared base, and also check the cumulative diff
-from the stack root. Report which scope each finding belongs to.
+For a PR, or for a branch with an associated PR, load
+[stacked-PR guidance](references/stacked-prs.md) and record the requested scope
+before reviewing. A branch without an associated PR remains a terminal-only
+review target.
 
 Review hand-written source. Exclude generated files only when the repository
 identifies them as generated. A generated migration may still require review of
@@ -52,118 +63,191 @@ the model change, deploy safety, and compatibility.
 
 ### Run checks
 
-Run the repository's read-only format, lint, type, and test checks before reading
-the diff. Do not run auto-fix formatters or hooks that write to the checkout. Do
-not execute untrusted branch or fork code. Record checks that were skipped and
-why. Report an exact tool result once; do not re-derive it as a second model
-finding.
+Inspect the target provenance, base and head, and changed executable or
+configuration files before running commands. Do not execute untrusted branch or
+fork code. Run the repository's read-only format, lint, type, and test checks.
+Do not run auto-fix formatters or hooks that write to the checkout. Record
+material working-tree changes and skipped checks. Report each exact tool result
+once; do not re-derive it as a second finding.
 
-The mechanical pass is complete when the target, base, diff source, trust
-status, generated-file exclusions, repository check results, and skipped checks
-are recorded.
+Run the Ume mechanical convention checker from the canonical
+ume-conventions references on the exact changed lines before the Ume-rules
+pass:
+
+~~~bash
+git diff --no-color -U0 <base>...HEAD \
+  | python <ume-conventions>/scripts/mechanical_check.py \
+      --root <repository> --diff-stdin
+~~~
+
+For a working tree, use git diff --no-color -U0 HEAD. Check untracked source
+files separately by passing their paths to the checker. A status of 1 means
+that the checker found convention violations. Record rule IDs, paths, lines,
+and messages in mechanical-check evidence, then translate each confirmed
+finding into the normal format with a plain-language summary. Explain why the
+rule applies and matters, and give a concrete fix. Do not report a mechanical
+finding again in the Ume-rules or model pass. Read
+[the mechanical rule table](../ume-conventions/references/mechanical.md) to
+interpret scope and suppression rules. If the checker cannot run, record
+not run — checker unavailable and do not treat a model scan as equivalent
+deterministic evidence.
+
+For changed Python files, discover the repository's documented Ruff command
+from package configuration, task-runner files, CI, or repository documentation.
+Run that read-only command against the changed files when it supports
+file-scoped checks; otherwise run the documented project check. If no configured
+Ruff command exists, record not run — no repository Ruff command. Record
+whether C901 or PLR rules are enabled when complexity is relevant. Ruff
+complexity rules do not enforce a physical line-count limit, so keep the
+40-line review prompt separate from Ruff evidence.
+
+The mechanical pass is complete when the target, provenance, base, diff source,
+trust status, generated-file exclusions, repository check results, mechanical
+checker result, Ruff status, and skipped checks all have ledger entries.
 
 ## Pass 2 — Ume rules
 
-Read [Ume Conventions](../ume-conventions/SKILL.md) and its applicable
-references before judging the diff. Always read `testing.md`, `simplicity.md`,
-`naming.md`, and `security.md`. Read the Python or TypeScript base rules for
-matching files, then only the FastAPI, Django, or React rules supported by
-repository evidence. Keep the selected paths in the review notes. A missing
-convention file makes that lane incomplete.
+Use [Ume Conventions](../ume-conventions/SKILL.md) as a router. Its
+references/*.md files are the canonical, reusable rules; other skills should
+link to those references instead of copying their content.
 
-Hold every applicable rule against the changed lines. Cite the convention file
-and the changed file and line. A house-rule finding does not need a separate
-failure scenario, but it must point to changed code and the named rule. Do not
-turn an undocumented preference into a finding.
+Always read [testing](../ume-conventions/references/testing.md),
+[simplicity](../ume-conventions/references/simplicity.md),
+[naming](../ume-conventions/references/naming.md), and
+[security](../ume-conventions/references/security.md).
+Read the Python or TypeScript base rules for matching files, then only the
+FastAPI, Django, or React rules supported by repository evidence. If a required
+convention file is missing, record that lane as skipped.
 
-Judge comments and knowledge placement using `simplicity.md`.
+Apply only conventions supported by repository evidence. Cite the convention
+file and changed file and line for a finding. A house-rule finding does not need
+a separate failure scenario, but it must point to changed code and the named
+rule. Do not turn an undocumented preference into a finding.
 
-The Ume-rules pass is complete when every changed source file has its applicable
-references recorded and every applicable rule has been considered.
+Use [naming.md](../ume-conventions/references/naming.md) as the single source
+for callable behavior verbs, Boolean prefixes, effect names, and failure-visible
+names. Do not copy those rules into the review skill.
+
+When the diff adds or renames a production callable, or changes its return or
+side-effect contract, load [the sidecar protocol](references/sidecars.md) and
+run the naming lane. Skip it for tests-only, documentation-only, and
+configuration-only changes. If delegation is unavailable, perform the same
+narrow checklist locally and record the fallback.
+
+For every changed production file, load [the comment audit](references/comment-audit.md).
+Inspect added or modified comments and comments immediately governing changed
+behavior. Classify the audit in the ledger, including the no-finding case.
+
+The Ume-rules pass is complete when every changed source file has its selected
+reference entry, every applicable rule has been considered, every in-scope
+comment has been classified, and every naming-sidecar candidate has been
+verified, deduplicated, admitted, or dropped.
 
 ## Pass 3 — model review
 
-Read the diff yourself. Do not delegate the general code review. The only
-delegated lane is the bounded spec review below.
+Read the diff yourself. Do not delegate the general code review. For elevated
+risk involving persistence, transactions, authorization, shared state,
+concurrency, public contracts, migrations, or external effects, load the
+independent-review lane in [the sidecar protocol](references/sidecars.md).
+Give that reviewer the diff, requirements, and relevant files, but not the
+implementer's reasoning or conclusions. Verify its findings before reporting
+them. If the lane is unavailable, record it as skipped and do not describe the
+main review as independent.
 
 ### Trace behavior
 
 Trace values that carry state across the repository: permissions, status,
 caches, URLs, IDs, transactions, retries, persistence, and external side
 effects. Find other readers and writers before claiming a race, exposure,
-stale state, missing reuse, or broken contract. Cite the files and lines that
-establish the claim.
+stale state, missing reuse, or a broken contract.
 
-Question every construct the diff adds: a wrapper, abstraction, dependency,
-memoization call, option, validation branch, serializer field, route, or
-configuration value. Ask what it buys, whether the underlying choice is right,
-and whether an existing path already does the job.
+For a changed handler, service operation, job, factory, command, consumer, or
+other integration boundary, trace one level outward to callers and callees.
+Record the caller-visible result, material effects, ownership of commits or
+external calls, and failure or retry behavior.
+
+When the patch changes a public, stored, or published contract, compare its
+producers, consumers, exports, serialized fields, schemas, migrations,
+configuration, generated artifacts, docs, and examples. Skip this check for a
+private internal change with no stored or published contract.
+
+When the change modifies a public or integration boundary, persistent or shared
+state, a transaction boundary, or an external effect, read
+[Contract & State](references/contract-and-state.md). That reference defines
+the required trace, concurrency admission gate, atomic-outcome rule, and
+reporting threshold.
+
+Expand the trace only across applicable risk surfaces: data integrity and
+stored-data or message migrations, concurrency and idempotency, security and
+privacy, backward and forward compatibility, performance and resource use,
+and observability, deployment, and rollback.
+
+Use production-function size as a triage signal, not a defect rule. Exclude
+test modules. For each changed production function over 40 nonblank physical
+lines, check whether it contains multiple responsibilities or an independently
+useful caller-visible subset. Report an issue only when that inspection finds a
+concrete defect or supported house-rule violation.
+
+Treat complexity, coupling, design smells, and metrics as investigation signals.
+Do not infer a defect from a metric or a SOLID label. Apply the admission gates
+above. Use the single Ponytail simplicity pass for confirmed,
+concrete over-engineering findings.
 
 ### Review tests
 
-Review changed production code and tests together. Use `testing.md` to check
-the changed behavior, normal and boundary scenarios, independent oracles,
-isolation, the smallest useful test boundary, and the exact command and result.
-Treat coverage as context, not proof. Treat AI-generated tests as drafts:
-check for copied expected values, disabled assertions, test-only branches, and
-tests that do not exercise the changed behavior. If origin is unknown, treat
-the evidence as correlated until an independent oracle exists.
+Review changed production code and tests together. Use
+[testing](../ume-conventions/references/testing.md) to check
+normal and boundary scenarios, independent oracles, isolation, the smallest
+useful test boundary, and the exact command and result. Treat coverage as
+context, not proof. Treat AI-generated tests as drafts: check for copied
+expected values, disabled assertions, test-only branches, and tests that do not
+exercise the changed behavior. If origin is unknown, treat the evidence as
+correlated until an independent oracle exists.
 
-If the repository tests an AI feature, use the AI section in `testing.md` for
+Prefer assertions on observable outcomes and domain invariants. Assert internal
+collaboration or call order only when it is necessary to prove an observable
+contract, invariant, or failure-safety property.
+
+If the repository tests an AI feature, use the AI section in
+[testing](../ume-conventions/references/testing.md) for
 fixed examples, model and prompt version, adversarial cases, tool permissions,
 output schema, fallback behavior, and cost or latency evidence.
 
-### Spec review sidecar
+### Spec review
 
 When a task, issue, PR body, acceptance-criteria document, ADR, or other
-explicit specification is available, spawn one read-only spec-review subagent.
-Give it the specification and the target diff. Ask it to:
+explicit specification is available, load the spec lane in
+[the sidecar protocol](references/sidecars.md). If no explicit specification
+exists, record Spec review: not applicable. Verify every candidate against
+the specification, diff, and repository before reporting it. Put unresolved
+items in questions.
 
-1. list each explicit requirement;
-2. mark each requirement `met`, `missing`, `contradicted`, or `ambiguous`;
-3. cite the requirement and the changed file and line for every non-`met` item.
-
-The subagent must not review style, invent requirements, edit files, execute
-untrusted code, post comments, or give the final verdict. Treat its output as
-candidates. Verify every candidate against the specification, diff, and
-repository before reporting it. Put unresolved items in questions. If no
-explicit specification exists, record `Spec review: not applicable`.
-
-The model pass is complete when each changed behavior has a state and contract
-trace, each applicable test scenario has evidence or a reason it is not covered,
-and each spec candidate is confirmed, dropped, or moved to questions.
+The model pass is complete when every applicable risk surface has a ledger
+status and trace, every applicable test scenario has evidence or a reason it is
+not covered, and every spec candidate is confirmed, dropped, or moved to
+questions.
 
 ## Pass 4 — simplicity
 
-Run the Ponytail ladder in `simplicity.md` after the model pass. Report a
+Run the Ponytail ladder in
+[simplicity](../ume-conventions/references/simplicity.md) after the model pass. Report a
 simplification only when the changed code violates that file, the replacement
 is concrete and smaller, and a bounded repository search shows that the
 construct is not load-bearing. If the search is inconclusive, ask a question.
-Respect the safety boundary in `simplicity.md`. Report a duplicate only once.
-Ponytail findings are `suggestion` unless the construct causes a confirmed
-defect.
+Respect the safety boundary in
+[simplicity](../ume-conventions/references/simplicity.md). Report each duplicate
+only once.
 
-## Final ASD-STE100 pass
-
-Rewrite the finished prose into ASD-STE100-informed English. Use the official
-standard and project glossary for exact vocabulary when available. Without
-those sources, do not claim full compliance.
-
-- Use direct, active sentences with one main topic.
-- Use simple, familiar words and one consistent term for one concept.
-- Make the actor, action, condition, and result explicit.
-- Prefer precise verbs over vague nominalizations and unnecessary jargon.
-- Keep warnings, assumptions, limitations, and questions explicit.
-
-Rewrite prose only. Keep quoted code, file paths, line numbers, severity labels,
-identifiers, commands, URLs, and raw command-result excerpts byte-for-byte
-unchanged. Mask secrets before output or posting.
+This pass is complete when every added abstraction, option, wrapper, dependency,
+memoization call, validation branch, serializer field, route, or configuration
+value has a status of finding, question, or no finding with bounded search
+evidence.
 
 ## Output
 
 Read [the finding format](references/comment-format.md). Open with findings. Do
 not add praise, a generic checklist, or a diff summary. Order findings by
-`critical`, `warning`, then `suggestion`.
+critical, warning, then suggestion.
 
 Then include:
 
@@ -172,18 +256,23 @@ Then include:
 3. selected convention references;
 4. test evidence when behavior changed;
 5. questions about invisible intent or unresolved requirements;
-6. one verdict: `Approve`, `Approve with notes`, `Request changes`, or `Discuss`.
+6. one verdict: Approve, Request changes, or Comment.
 
-Use `Request changes` only for confirmed critical or warning findings and only
+Use Request changes only for confirmed critical or warning findings and only
 when the authenticated GitHub user is not the PR author. GitHub rejects a
-self-authored `Request changes` review; submit `COMMENT` instead and state that
-limitation. Use `Discuss` when the result depends on an unresolved product or
-architecture decision. State checks that did not run, including `not run — not
-authorized`, `not run — untrusted source`, and `not applicable`.
+self-authored Request changes review; submit COMMENT instead and state that
+limitation. Use Comment for suggestions, unresolved questions, or no findings.
+State checks that did not run, including not run — not authorized, not run —
+untrusted source, and not applicable.
 
-For a PR target, read [posting.md](references/posting.md) and post the finished
-review after the ASD-STE100 pass. Post one inline comment per finding. Use a
-general PR comment when no changed line can anchor the finding. Do not post
-unresolved candidates, questions, or secrets. If there are no findings, post a
-`No findings.` review. A working-tree review has terminal output only. Verify
-the posted review URL and state in the handoff.
+For a PR target, or an explicitly authorized branch target with an associated
+PR, read [posting.md](references/posting.md). Post one inline comment for each
+anchorable finding and put unanchored findings in the review body as described
+there. Do not post unresolved candidates, questions, or secrets. If there are no
+findings, post a No findings. review. A working-tree review has terminal output
+only. Verify the posted review URL and state in the handoff.
+
+Before handoff, confirm that every changed file appears in the ledger, every
+candidate is admitted, dropped, or recorded as a question, findings are
+deduplicated and grounded, all check and sidecar statuses are explicit, the
+output follows the finding format, and any authorized post is verified.

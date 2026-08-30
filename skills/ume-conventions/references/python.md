@@ -16,28 +16,34 @@ These rules apply to Python regardless of web framework.
 - Raise or translate errors at a clear boundary. Do not catch `Exception` unless the code logs enough context and has a deliberate recovery path.
 - Use context managers for files, locks, and resources that need cleanup.
 - Use timezone-aware UTC values for instants. Compute one current time per flow and reuse it when consistency matters.
-- Give external network calls an explicit timeout and bounded retry behavior.
-- Avoid mutable default arguments and hidden global state.
+- **Mechanical (`UME-NET001`):** Give known direct external network calls an
+  explicit timeout. Keep retry behavior bounded and review it for context.
+- **Mechanical (`UME-PY005`):** Do not make known blocking HTTP, sleep, or
+  subprocess calls inside `async def`; use an async client or explicit thread
+  boundary.
+- **Mechanical (`UME-PY001`):** Do not use mutable default arguments. Use a
+  sentinel or factory when a default collection is required.
 - Use a bare `*` in a function signature when parameters should be keyword-only, especially when positional order would be unclear or future optional parameters should not break callers. Use `*args` or `**kwargs` only when arbitrary arguments are part of the contract; prefer explicit parameters otherwise.
-- Treat a single leading underscore as file-local implementation detail. Do not
-  import or call `_private` functions or methods from another module. If code
-  needs a cross-module caller, give it a public name without the underscore.
-  Dunder protocol methods such as `__init__` are language or framework
-  exceptions.
+- **Mechanical (`UME-PY002`):** Treat a single leading underscore as file-local
+  implementation detail. Do not import or call `_private` functions or methods
+  from another module. If code needs a cross-module caller, give it a public
+  name without the underscore. Dunder protocol methods such as `__init__` are
+  language or framework exceptions.
 - Represent expected domain outcomes with explicit typed values when callers must
   distinguish them. Reserve exceptions for failure paths, and use a typed
   project exception hierarchy instead of several boolean or `None` sentinels.
 
 ## Structure and naming
 
-- Put public module functions before private helpers.
-- Inside a class, put the constructor and public methods before `_private` helpers. Keep private helpers at the bottom unless a framework lifecycle requires another order.
-- Name a function for the value it returns, not for a vague action. Avoid
-  `get_`, `handle_`, `process_`, `manage_`, and `do_` when a value name is
-  clearer. Use question- or adjective-shaped names for predicates.
-- Make exception behavior visible: use `_or_raise` for a value-or-exception
-  helper and `find_` for a helper that may return `None`. Do not hide a raise
-  behind an innocuous accessor name.
+- **Mechanical (`UME-PY003`):** Put public module functions before private
+  helpers. Inside a class, put the constructor and public methods before
+  `_private` helpers. Keep private helpers at the bottom unless a framework
+  lifecycle requires another order.
+- **Mechanical (`UME-PY004`):** Use `snake_case` for Python function names and
+  `PascalCase` for class names.
+- Follow the callable behavior, Boolean-prefix, effect, and failure-visible
+  naming rules in [naming.md](naming.md). Keep those rules in that canonical
+  reference instead of duplicating or relaxing them here.
 - Prefer small composable functions, unabbreviated names, and clear control
   flow over cleverness or needless mutation.
 - Encode stable invariants in types, enums, dataclasses, relationships, or

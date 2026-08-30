@@ -1,7 +1,7 @@
 ---
 type: Coding Convention
 title: Simplicity and comments
-description: Prefer the smallest clear design and keep comments focused on why.
+description: Prefer the smallest clear design and keep production comments rare.
 tags: [coding-convention, simplicity, comments, ponytail]
 status: active
 ---
@@ -10,9 +10,9 @@ status: active
 
 Be a lazy senior developer: remove work that does not need to exist, but understand the full problem before simplifying it.
 
-Keep code terse and clear. Comments are the exception, not the default. A
-comment earns its place only when deleting the line it guards would make the
-code look correct.
+Keep code terse and clear. Production comments are exceptional. A comment earns
+its place only when the code would otherwise be misleading and the reason is
+local, precise, and impossible to express with a name, type, test, or structure.
 
 ## Ponytail ladder
 
@@ -30,19 +30,29 @@ Deletion is preferred to addition. Reuse is preferred to a second name and a sec
 
 ## Comments and knowledge
 
-Comments explain **why**, not **how**. Use them for:
+Default to no explanatory comment in production code. A comment is not
+automatically acceptable just because it explains **why**. Keep one only for:
 
-- intent that is not visible in the code;
-- an invariant or compatibility constraint;
-- a non-obvious failure mode;
-- a deliberate tradeoff and its known limit; or
-- a security, performance, or correctness reason that a future maintainer must not remove.
+- public API documentation that defines a caller contract or generated documentation;
+- a concise local invariant or compatibility, security, accessibility, or
+  correctness constraint that cannot be expressed in code; or
+- an unavoidable local workaround whose failure mode is not otherwise visible.
 
-Do not use a comment to narrate control flow, restate a function name, or describe an obvious line. Improve the name, structure, or extraction first.
+Comments that describe domain behavior, product decisions, architecture,
+operational policy, external-system behavior, thresholds, calibration, history,
+or tradeoffs belong in the repository's canonical `knowledge/` or decision
+records. Comments that narrate control flow, restate a function name, describe
+an obvious line, or record untracked future intent should be deleted. Improve
+the name, structure, test, or knowledge placement first.
 
-Durable system behavior, architecture, operational knowledge, and decisions belong in the repository's canonical knowledge or decision records. Edit that knowledge instead of adding a local comment when the fact applies beyond the line or file. Keep a local comment only when the explanation is local and the code cannot express it clearly.
+When a comment contains durable rationale, update or create the relevant
+knowledge concept instead of keeping the rationale beside the code. Do not add
+a code comment merely to point at knowledge; make the code and knowledge
+discoverable through their normal names and indexes.
 
-Keep public API documentation when it defines a caller contract or generated documentation. Do not repeat the signature or implementation. Remove or update stale comments when behavior changes.
+Keep public API documentation only when it defines a caller contract or
+generated documentation. Do not repeat the signature or implementation. Remove
+or update stale comments when behavior changes.
 
 ## Safety boundary
 
