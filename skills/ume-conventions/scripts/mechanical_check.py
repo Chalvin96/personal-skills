@@ -64,43 +64,43 @@ def _is_single_private(name: str) -> bool:
     return name.startswith("_") and not name.startswith("__")
 
 
-def _qualified_name(node: ast.AST) -> str | None:
+def _build_qualified_name(node: ast.AST) -> str | None:
     if isinstance(node, ast.Name):
         return node.id
     if isinstance(node, ast.Attribute):
-        parent = _qualified_name(node.value)
+        parent = _build_qualified_name(node.value)
         return f"{parent}.{node.attr}" if parent else node.attr
     return None
 
 
-def _root_name(node: ast.AST) -> str | None:
+def _build_root_name(node: ast.AST) -> str | None:
     while isinstance(node, ast.Attribute):
         node = node.value
     return node.id if isinstance(node, ast.Name) else None
 
 
-def _target_names(node: ast.AST) -> Iterable[str]:
+def _collect_target_names(node: ast.AST) -> Iterable[str]:
     if isinstance(node, ast.Name):
         yield node.id
     elif isinstance(node, (ast.Tuple, ast.List)):
         for child in node.elts:
-            yield from _target_names(child)
+            yield from _collect_target_names(child)
 
 
 def _has_keyword(call: ast.Call, name: str) -> bool:
     return any(keyword.arg == name for keyword in call.keywords)
 
 
-def _safe_yaml_loader(call: ast.Call) -> bool:
+def _is_safe_yaml_loader(call: ast.Call) -> bool:
     for keyword in call.keywords:
         if keyword.arg != "Loader":
             continue
-        qualified = _qualified_name(keyword.value)
+        qualified = _build_qualified_name(keyword.value)
         return qualified in {"SafeLoader", "yaml.SafeLoader"}
     return False
 
 
-def _suppressed(lines: list[str], line: int, rule: str) -> bool:
+def _is_suppressed(lines: list[str], line: int, rule: str) -> bool:
     for index in (line - 1, line - 2):
         if index < 0 or index >= len(lines):
             continue
@@ -129,20 +129,22 @@ class Checker:
         related_lines: Iterable[int] = (),
     ) -> None:
         candidates = [line, *related_lines]
+        if _is_suppressed(lines, line, rule):
+            return
         if self.changed_lines is not None:
             changed = self.changed_lines.get(path, set())
             changed_candidates = [candidate for candidate in candidates if candidate in changed]
             if not changed_candidates:
                 return
             line = changed_candidates[0]
-        if _suppressed(lines, line, rule):
+        if _is_suppressed(lines, line, rule):
             return
         finding = Finding(rule, path, line, message)
         if finding not in self.findings:
             self.findings.append(finding)
 
 
-def _python_imports(tree: ast.AST) -> tuple[set[str], set[str], set[str]]:
+def _collect_python_imports(tree: ast.AST) -> tuple[set[str], set[str], set[str]]:
     imported_names: set[str] = set()
     legacy_names: set[str] = set()
     legacy_qualified: set[str] = set()
@@ -179,23 +181,79 @@ def _is_route_decorator(node: ast.AST) -> bool:
     return node.func.attr in K_HTTP_METHODS - {"request"}
 
 
+def _has_python_module_import(tree: ast.AST, module: str) -> bool:
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import) and any(
+            alias.name == module or alias.name.startswith(f"{module}.") for alias in node.names
+        ):
+            return True
+        if isinstance(node, ast.ImportFrom) and node.module and (
+            node.module == module or node.module.startswith(f"{module}.")
+        ):
+            return True
+    return False
+
+
+def _has_dependency_evidence(root: Path, package: str) -> bool:
+    package = package.lower()
+    for pattern in ("pyproject.toml", "requirements*.txt", "setup.cfg", "setup.py", "Pipfile", "package.json"):
+        for file in root.glob(pattern):
+            try:
+                text = file.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            if file.name == "package.json":
+                try:
+                    manifest = json.loads(text)
+                except json.JSONDecodeError:
+                    continue
+                dependency_sections = (
+                    "dependencies",
+                    "devDependencies",
+                    "peerDependencies",
+                    "optionalDependencies",
+                )
+                if any(package in manifest.get(section, {}) for section in dependency_sections):
+                    return True
+                continue
+            if re.search(rf"(?im)^\s*[\"']?{re.escape(package)}[\"']?\s*(?:[<>=!~\[]|$)", text):
+                return True
+            if re.search(rf"(?i)[\"']{re.escape(package)}[\"']", text):
+                return True
+    return False
+
+
 def _is_migration_path(path: str) -> bool:
     parts = set(Path(path).parts)
     return bool(parts & {"alembic", "migrations"}) or Path(path).name.startswith("migration")
 
 
-def _checks_k_constants(path: str) -> bool:
+def _is_k_constant_scope(path: str) -> bool:
     if _is_migration_path(path):
         return False
     parts = Path(path).parts
     try:
         tests_index = parts.index("tests")
     except ValueError:
-        return True
-    return tests_index + 1 < len(parts) and parts[tests_index + 1] == "integration"
+        tests_index = -1
+    if tests_index >= 0:
+        if tests_index + 1 < len(parts) and parts[tests_index + 1] == "integration":
+            return True
+        return False
+    filename = Path(path).name
+    if filename.startswith("test_") or filename.endswith("_test.py"):
+        return False
+    return True
 
 
-def _check_python(checker: Checker, path: str, text: str, django_evidence: bool) -> None:
+def _check_python(
+    checker: Checker,
+    path: str,
+    text: str,
+    django_evidence: bool,
+    sqlalchemy_evidence: bool,
+    fastapi_evidence: bool,
+) -> None:
     lines = text.splitlines()
     try:
         tree = ast.parse(text, filename=path)
@@ -209,9 +267,8 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
         )
         return
 
-    imported_names, legacy_names, legacy_qualified = _python_imports(tree)
+    imported_names, legacy_names, legacy_qualified = _collect_python_imports(tree)
 
-    # UME-DJ001: Django settings are accessed through django.conf.settings.
     if django_evidence:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
@@ -229,7 +286,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-PY001: mutable default values are unambiguous AST findings.
     mutable_nodes = (ast.List, ast.Dict, ast.Set, ast.ListComp, ast.DictComp, ast.SetComp)
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -238,7 +294,7 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
             for default in defaults:
                 if isinstance(default, mutable_nodes) or (
                     isinstance(default, ast.Call)
-                    and _qualified_name(default.func) in {"list", "dict", "set"}
+                    and _build_qualified_name(default.func) in {"list", "dict", "set"}
                 ):
                     checker.emit(
                         path,
@@ -248,7 +304,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                         lines,
                     )
 
-    # UME-PY002: a single-leading-underscore name is file-local.
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -271,7 +326,7 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                         lines,
                     )
         elif isinstance(node, ast.Attribute) and _is_single_private(node.attr):
-            if _root_name(node.value) in imported_names:
+            if _build_root_name(node.value) in imported_names:
                 checker.emit(
                     path,
                     node.lineno,
@@ -279,10 +334,14 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     "private attribute is accessed across a file boundary",
                     lines,
                 )
-        elif isinstance(node, ast.Call) and _qualified_name(node.func) == "getattr":
+        elif isinstance(node, ast.Call) and _build_qualified_name(node.func) == "getattr":
             if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):
                 private_name = node.args[1].value
-                if isinstance(private_name, str) and _is_single_private(private_name):
+                if (
+                    isinstance(private_name, str)
+                    and _is_single_private(private_name)
+                    and _build_root_name(node.args[0]) in imported_names
+                ):
                     checker.emit(
                         path,
                         node.lineno,
@@ -308,7 +367,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-PY003: public definitions precede file-local helpers.
     private_seen = False
     for node in tree.body:
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -352,7 +410,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     ],
                 )
 
-    # UME-PY004: basic Python identifier shape is mechanically knowable.
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if not node.name.startswith("__") and not K_SNAKE_CASE.fullmatch(node.name):
@@ -372,8 +429,7 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-PY006: new direct module constants use the repository prefix.
-    if _checks_k_constants(path):
+    if _is_k_constant_scope(path):
         for node in tree.body:
             if isinstance(node, ast.Assign):
                 targets = node.targets
@@ -384,7 +440,7 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
             invalid_names = [
                 name
                 for target in targets
-                for name in _target_names(target)
+                for name in _collect_target_names(target)
                 if K_CONSTANT_NAME.fullmatch(name) and not name.startswith("K_")
             ]
             if invalid_names:
@@ -396,7 +452,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-SEC001: direct unsafe evaluation or deserialization calls.
     unsafe_calls = {
         "eval",
         "exec",
@@ -409,8 +464,8 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        qualified = _qualified_name(node.func)
-        if qualified in unsafe_calls or (qualified == "yaml.load" and not _safe_yaml_loader(node)):
+        qualified = _build_qualified_name(node.func)
+        if qualified in unsafe_calls or (qualified == "yaml.load" and not _is_safe_yaml_loader(node)):
             checker.emit(
                 path,
                 node.lineno,
@@ -419,9 +474,8 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                 lines,
             )
 
-    # UME-NET001: known direct network calls must state a timeout.
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and _qualified_name(node.func) in K_NETWORK_CALLS:
+        if isinstance(node, ast.Call) and _build_qualified_name(node.func) in K_NETWORK_CALLS:
             if not _has_keyword(node, "timeout"):
                 checker.emit(
                     path,
@@ -431,10 +485,9 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-PY005: known blocking calls inside async functions.
     for function in (node for node in ast.walk(tree) if isinstance(node, ast.AsyncFunctionDef)):
         for node in ast.walk(function):
-            if isinstance(node, ast.Call) and _qualified_name(node.func) in K_BLOCKING_CALLS:
+            if isinstance(node, ast.Call) and _build_qualified_name(node.func) in K_BLOCKING_CALLS:
                 checker.emit(
                     path,
                     node.lineno,
@@ -443,30 +496,29 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-    # UME-SA001: SQLAlchemy 1.x query/model constructors are not the v2 API.
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            qualified = _qualified_name(node.func)
-            if isinstance(node.func, ast.Attribute) and node.func.attr == "query":
-                checker.emit(
-                    path,
-                    node.lineno,
-                    "UME-SA001",
-                    "legacy SQLAlchemy `.query()` usage; use `select()`",
-                    lines,
-                )
-            elif not _is_migration_path(path) and (qualified in legacy_names or qualified in legacy_qualified):
-                checker.emit(
-                    path,
-                    node.lineno,
-                    "UME-SA002",
-                    "legacy SQLAlchemy constructor; use the typed SQLAlchemy 2.x API",
-                    lines,
-                )
+    if sqlalchemy_evidence:
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                qualified = _build_qualified_name(node.func)
+                if isinstance(node.func, ast.Attribute) and node.func.attr == "query":
+                    checker.emit(
+                        path,
+                        node.lineno,
+                        "UME-SA001",
+                        "legacy SQLAlchemy `.query()` usage; use `select()`",
+                        lines,
+                    )
+                elif not _is_migration_path(path) and (qualified in legacy_names or qualified in legacy_qualified):
+                    checker.emit(
+                        path,
+                        node.lineno,
+                        "UME-SA002",
+                        "legacy SQLAlchemy constructor; use the typed SQLAlchemy 2.x API",
+                        lines,
+                    )
 
-    client = _client_parts(path)
-    if client and client[1] == "manager.py":
-        # UME-FAPI003: managers call api.py; they do not own transport setup.
+    client = _parse_client_parts(path)
+    if fastapi_evidence and client and client[1] == "manager.py":
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 transport_imported = any(alias.name.split(".", 1)[0] in K_TRANSPORT_MODULES for alias in node.names)
@@ -483,7 +535,6 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                     lines,
                 )
 
-        # UME-FAPI004: managers must not own local transaction commits.
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                 if node.func.attr in {"commit", "flush", "rollback"}:
@@ -495,17 +546,19 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                         lines,
                     )
 
-    # UME-FAPI001: route functions must not own database writes.
     mutation_methods = {"add", "delete", "merge", "bulk_save_objects"}
     transaction_methods = {"commit", "flush", "rollback"}
     database_roots = {"db", "database", "session", "unit_of_work", "uow"}
     for function in (node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))):
-        if not any(_is_route_decorator(decorator) for decorator in function.decorator_list):
+        if not fastapi_evidence or not any(_is_route_decorator(decorator) for decorator in function.decorator_list):
             continue
         for node in ast.walk(function):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                 is_transaction_call = node.func.attr in transaction_methods
-                is_entity_call = node.func.attr in mutation_methods and _root_name(node.func.value) in database_roots
+                is_entity_call = (
+                    node.func.attr in mutation_methods
+                    and _build_root_name(node.func.value) in database_roots
+                )
                 if is_transaction_call or is_entity_call:
                     checker.emit(
                         path,
@@ -515,15 +568,14 @@ def _check_python(checker: Checker, path: str, text: str, django_evidence: bool)
                         lines,
                     )
 
-    # UME-SEC002: obvious literal credentials are never source configuration.
     for node in ast.walk(tree):
         targets: list[str] = []
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                targets.extend(_target_names(target))
+                targets.extend(_collect_target_names(target))
             value = node.value
         elif isinstance(node, ast.AnnAssign):
-            targets.extend(_target_names(node.target))
+            targets.extend(_collect_target_names(node.target))
             value = node.value
         else:
             continue
@@ -564,11 +616,14 @@ def _strip_js_comments(lines: list[str]) -> list[str]:
     return result
 
 
-def _check_javascript(checker: Checker, path: str, text: str) -> None:
+def _check_javascript(checker: Checker, path: str, text: str, react_dependency: bool) -> None:
     original_lines = text.splitlines()
     lines = _strip_js_comments(original_lines)
+    react_file_evidence = bool(
+        re.search(r"(?:from\s+|import\s+|require\(\s*)['\"]react(?:/[^'\"]*)?['\"]", text)
+    )
+    react_evidence = react_dependency or react_file_evidence
     for number, line in enumerate(lines, 1):
-        # UME-TS001: explicit `any` hides an untyped boundary.
         if re.search(r"(?::\s*any\b|\bas\s+any\b|<\s*any\s*>|\bArray\s*<\s*any\s*>)", line):
             checker.emit(
                 path,
@@ -578,7 +633,6 @@ def _check_javascript(checker: Checker, path: str, text: str) -> None:
                 original_lines,
             )
 
-        # UME-TS002: non-null assertions are mechanically visible.
         if re.search(r"(?<![=!])[A-Za-z_$][\w$]*!\s*(?=[.;,)\]:])", line):
             checker.emit(
                 path,
@@ -588,8 +642,7 @@ def _check_javascript(checker: Checker, path: str, text: str) -> None:
                 original_lines,
             )
 
-        # UME-REACT001: do not pass a hook call directly as another call's argument.
-        if re.search(r"\b[A-Za-z_$][\w$]*\(\s*(?:await\s+)?use[A-Z][\w$]*\(", line):
+        if react_evidence and re.search(r"\b[A-Za-z_$][\w$]*\(\s*(?:await\s+)?use[A-Z][\w$]*\(", line):
             checker.emit(
                 path,
                 number,
@@ -598,7 +651,6 @@ def _check_javascript(checker: Checker, path: str, text: str) -> None:
                 original_lines,
             )
 
-        # UME-SEC003: obvious literal credentials in browser-delivered code.
         secret = re.search(
             r"\b(?:API_KEY|SECRET|PASSWORD|PRIVATE_KEY|ACCESS_TOKEN|AUTH_TOKEN|CLIENT_SECRET)\b\s*[:=]\s*(['\"])(.*?)\1",
             line,
@@ -650,7 +702,7 @@ def _check_javascript(checker: Checker, path: str, text: str) -> None:
             )
 
 
-def _client_parts(path: str) -> tuple[str, str] | None:
+def _parse_client_parts(path: str) -> tuple[str, str] | None:
     parts = Path(path).parts
     for index, part in enumerate(parts[:-2]):
         if part == "clients":
@@ -658,10 +710,17 @@ def _client_parts(path: str) -> tuple[str, str] | None:
     return None
 
 
-def _check_client_layout(checker: Checker, paths: list[str], existing: set[str]) -> None:
+def _check_client_layout(
+    checker: Checker,
+    paths: list[str],
+    existing: set[str],
+    fastapi_evidence: bool,
+) -> None:
+    if not fastapi_evidence:
+        return
     checked: set[str] = set()
     for path in paths:
-        client = _client_parts(path)
+        client = _parse_client_parts(path)
         if client is None:
             continue
         directory, filename = client
@@ -713,11 +772,11 @@ def _parse_diff(diff: str) -> dict[str, set[int]]:
     return dict(changed)
 
 
-def _relative_path(root: Path, path: Path) -> str:
+def _get_relative_path(root: Path, path: Path) -> str:
     return path.resolve().relative_to(root).as_posix()
 
 
-def _source_paths(root: Path, inputs: list[str]) -> list[tuple[str, Path]]:
+def _collect_source_paths(root: Path, inputs: list[str]) -> list[tuple[str, Path]]:
     paths: list[tuple[str, Path]] = []
     seen: set[str] = set()
     for value in inputs:
@@ -730,15 +789,27 @@ def _source_paths(root: Path, inputs: list[str]) -> list[tuple[str, Path]]:
                 continue
             if any(part in K_SKIP_DIRS for part in file.relative_to(root).parts):
                 continue
-            relative = _relative_path(root, file)
+            relative = _get_relative_path(root, file)
             if relative not in seen:
                 seen.add(relative)
                 paths.append((relative, file))
     return paths
 
 
-def _all_source_paths(root: Path) -> set[str]:
-    return {relative for relative, _ in _source_paths(root, ["."])}
+def _has_python_import_in_sources(
+    source_paths: list[tuple[str, Path]],
+    module: str,
+) -> bool:
+    for relative, file in source_paths:
+        if file.suffix.lower() not in {".py", ".pyi"}:
+            continue
+        try:
+            tree = ast.parse(file.read_text(encoding="utf-8"), filename=relative)
+        except (UnicodeDecodeError, SyntaxError):
+            continue
+        if _has_python_module_import(tree, module):
+            return True
+    return False
 
 
 def _has_django_evidence(root: Path) -> bool:
@@ -773,21 +844,34 @@ def main() -> int:  # noqa: UME-PY003 — CLI entrypoint follows parser helpers.
     else:
         inputs = args.paths or ["."]
 
-    source_paths = _source_paths(root, inputs)
+    source_paths = _collect_source_paths(root, inputs)
     checker = Checker(root, changed_lines)
-    existing = _all_source_paths(root)
-    django_evidence = _has_django_evidence(root)
+    all_source_paths = _collect_source_paths(root, ["."])
+    existing = {relative for relative, _ in all_source_paths}
+    django_evidence = _has_django_evidence(root) or _has_python_import_in_sources(all_source_paths, "django")
+    sqlalchemy_dependency = _has_dependency_evidence(root, "sqlalchemy")
+    fastapi_dependency = _has_dependency_evidence(root, "fastapi")
+    react_dependency = _has_dependency_evidence(root, "react")
+    sqlalchemy_evidence = sqlalchemy_dependency or _has_python_import_in_sources(all_source_paths, "sqlalchemy")
+    fastapi_evidence = fastapi_dependency or _has_python_import_in_sources(all_source_paths, "fastapi")
     for relative, file in source_paths:
         try:
             text = file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
         if file.suffix.lower() in {".py", ".pyi"}:
-            _check_python(checker, relative, text, django_evidence)
+            _check_python(
+                checker,
+                relative,
+                text,
+                django_evidence,
+                sqlalchemy_evidence,
+                fastapi_evidence,
+            )
         else:
-            _check_javascript(checker, relative, text)
+            _check_javascript(checker, relative, text, react_dependency)
 
-    _check_client_layout(checker, [relative for relative, _ in source_paths], existing)
+    _check_client_layout(checker, [relative for relative, _ in source_paths], existing, fastapi_evidence)
     checker.findings.sort(key=lambda finding: (finding.path, finding.line, finding.rule))
     if args.format == "json":
         print(json.dumps([asdict(finding) for finding in checker.findings], indent=2))

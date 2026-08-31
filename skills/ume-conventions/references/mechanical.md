@@ -55,6 +55,11 @@ The checker is intentionally conservative. It does not claim to prove
 architecture or behavior from syntax. It does not replace repository formatters,
 linters, type checkers, tests, or the model review.
 
+Framework-specific checks require evidence from the repository or source: a
+recognized dependency manifest or an import of the relevant framework. This
+keeps names such as `app.get()`, `builder.query()`, and `useValue()` from being
+treated as framework code in otherwise generic projects.
+
 `UME-SA002` does not inspect Alembic or migration paths because generated
 migrations commonly use SQLAlchemy `Column` declarations.
 
