@@ -1,11 +1,20 @@
 ---
 name: ume-conventions
-description: Apply Ume's coding conventions when writing or reviewing Python, FastAPI, Django, JavaScript, TypeScript, or React code. Load the language base plus only the framework-specific rules supported by repository evidence; always apply testing, simplicity, naming, and security.
+description: Route implementation and review work to Ume's canonical coding-convention references for Python, FastAPI, Django, JavaScript, TypeScript, and React.
 ---
 
 # Ume Conventions
 
-Use these references as the project's coding contract during implementation and review. A convention finding must point to changed code and either a concrete impact or the named rule. Do not report an undocumented preference as a defect.
+This is a thin router. The files under references/ are the canonical coding
+contract and are reusable by implementation and review skills. Link to those
+references instead of copying their rules into another skill. A convention
+finding must point to changed code and either a concrete impact or the named
+rule. Do not report an undocumented preference as a defect.
+
+For review requests, run [the mechanical checker](scripts/mechanical_check.py)
+and read [the mechanical rules](references/mechanical.md) before the
+model-based convention pass. Do not repeat a confirmed mechanical finding in
+the model pass.
 
 ## Load the rules
 

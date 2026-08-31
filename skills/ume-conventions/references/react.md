@@ -30,7 +30,8 @@ shared consumer.
 ## Hooks and effects
 
 - Keep hooks unconditional and preserve complete dependency arrays.
-- Do not pass a hook call directly as another function's argument. Assign it to a named value first.
+- **Mechanical (`UME-REACT001`):** Do not pass a hook call directly as another
+  function's argument. Assign it to a named value first.
 - Use `useMemo` and `useCallback` only when they protect a dependency identity, a memoized consumer, or a meaningful computation cost. Do not memoize primitive values or stable module constants.
 - Use effects for synchronization with an external system. Prefer a mutation's success/error callback for work that only reacts to that mutation.
 - A custom hook should earn its boundary. Do not wrap a bundle of selectors or a single forwarding call without a behavior reason.

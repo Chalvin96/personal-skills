@@ -15,7 +15,9 @@ Load this extension with `python.md`. These rules do not apply to FastAPI code.
 - Keep views thin. Put query composition and business rules in a service or domain boundary.
 - Serialize data before logging a success event. A serialization failure must not produce a false success log.
 - Log exception class and useful identifiers, not raw request bodies or sensitive payloads.
-- Use `django.conf.settings`, not direct settings-module imports, when accessing configured values.
+- Use `django.conf.settings`, not direct settings-module imports, when accessing
+  configured values. Direct settings-module imports are mechanically checked as
+  `UME-DJ001` when Django repository evidence exists.
 
 ## ORM and concurrency
 
