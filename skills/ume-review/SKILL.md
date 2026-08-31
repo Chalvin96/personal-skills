@@ -27,7 +27,7 @@ Keep a review ledger in the review notes. Record:
 - target provenance, base and head, diff source, trust status, and generated-file exclusions;
 - one convention-reference entry for every changed source file;
 - one entry for every applicable risk surface: "traced", "not applicable", or "skipped — reason";
-- every applicable lane in the single subagent review as "completed",
+- every applicable lane in the two subagent reviews as "completed",
   "fallback — main reviewer", "skipped — reason", or "not applicable".
 
 A pass is incomplete until every item in its ledger has a status and evidence.
@@ -118,8 +118,8 @@ a separate failure scenario, but it must point to changed code and the named
 rule. Do not turn an undocumented preference into a finding.
 
 When the diff adds or renames a production callable, or changes its return or
-side-effect contract, include the naming lane in the single
-[subagent review](references/subagent-review.md). Skip it for tests-only,
+side-effect contract, include the naming lane in the convention/specification
+[subagent review](references/subagent-reviews.md). Skip it for tests-only,
 documentation-only, and configuration-only changes.
 
 For every changed production file, run
@@ -132,11 +132,11 @@ verified, deduplicated, admitted, or dropped.
 
 ## Pass 3 — model review
 
-Read the diff yourself. Do not delegate the general code review. Use at most
-one subagent for the entire review. When delegation is available and authorized,
-combine every applicable naming, specification, and elevated-risk lane into the
-single [subagent review](references/subagent-review.md). Never spawn one
-subagent per lane.
+Read the diff yourself. Do not delegate the general code review. Use only the
+two roles defined in [subagent reviews](references/subagent-reviews.md): one
+reviewer combines naming and specification checks, and one independent reviewer
+handles elevated-risk changes. Run a role only when its trigger applies and
+delegation is available and authorized.
 
 ### Trace behavior
 
@@ -201,7 +201,7 @@ output schema, fallback behavior, and cost or latency evidence.
 
 When a task, issue, PR body, acceptance-criteria document, ADR, or other
 explicit specification is available, include the specification lane in the
-single [subagent review](references/subagent-review.md). If no explicit
+convention/specification [subagent review](references/subagent-reviews.md). If no explicit
 specification exists, record Spec review: not applicable.
 
 The model pass is complete when every applicable risk surface has a ledger
