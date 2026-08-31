@@ -27,7 +27,8 @@ Keep a review ledger in the review notes. Record:
 - target provenance, base and head, diff source, trust status, and generated-file exclusions;
 - one convention-reference entry for every changed source file;
 - one entry for every applicable risk surface: "traced", "not applicable", or "skipped — reason";
-- every delegated lane as "completed", "fallback — main reviewer", "skipped — reason", or "not applicable".
+- every applicable lane in the single subagent review as "completed",
+  "fallback — main reviewer", "skipped — reason", or "not applicable".
 
 A pass is incomplete until every item in its ledger has a status and evidence.
 
@@ -117,8 +118,8 @@ a separate failure scenario, but it must point to changed code and the named
 rule. Do not turn an undocumented preference into a finding.
 
 When the diff adds or renames a production callable, or changes its return or
-side-effect contract, run the
-[naming sidecar](references/naming-sidecar.md). Skip it for tests-only,
+side-effect contract, include the naming lane in the single
+[subagent review](references/subagent-review.md). Skip it for tests-only,
 documentation-only, and configuration-only changes.
 
 For every changed production file, run
@@ -126,15 +127,16 @@ For every changed production file, run
 
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
-comment has been classified, and every naming-sidecar candidate has been
+comment has been classified, and every naming candidate has been
 verified, deduplicated, admitted, or dropped.
 
 ## Pass 3 — model review
 
-Read the diff yourself. Do not delegate the general code review. For elevated
-risk involving persistence, transactions, authorization, shared state,
-concurrency, public contracts, migrations, or external effects, run the
-[independent-review sidecar](references/independent-review-sidecar.md).
+Read the diff yourself. Do not delegate the general code review. Use at most
+one subagent for the entire review. When delegation is available and authorized,
+combine every applicable naming, specification, and elevated-risk lane into the
+single [subagent review](references/subagent-review.md). Never spawn one
+subagent per lane.
 
 ### Trace behavior
 
@@ -198,8 +200,8 @@ output schema, fallback behavior, and cost or latency evidence.
 ### Spec review
 
 When a task, issue, PR body, acceptance-criteria document, ADR, or other
-explicit specification is available, run the
-[specification sidecar](references/specification-sidecar.md). If no explicit
+explicit specification is available, include the specification lane in the
+single [subagent review](references/subagent-review.md). If no explicit
 specification exists, record Spec review: not applicable.
 
 The model pass is complete when every applicable risk surface has a ledger
@@ -251,5 +253,5 @@ authorization, return terminal output only.
 
 Before handoff, confirm that every changed file appears in the ledger, every
 candidate is admitted, dropped, or recorded as a question, findings are
-deduplicated and grounded, all check and sidecar statuses are explicit, the
+deduplicated and grounded, all check and subagent-review statuses are explicit, the
 output follows the finding format, and any authorized post is verified.
