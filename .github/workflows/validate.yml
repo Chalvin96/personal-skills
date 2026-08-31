@@ -35,4 +35,4 @@ jobs:
       - name: Check schema assets
         run: test -f schemas/wayfinder-driven/schema.yaml && test -f schemas/wayfinder-driven/templates/trd.md
       - name: Check whitespace
-        run: git diff --check HEAD~1..HEAD
+        run: git show --check --format= HEAD
