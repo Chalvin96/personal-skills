@@ -41,7 +41,7 @@ payload into the repository:
 {
   "commit_id": "<HEAD_SHA>",
   "body": "<summary, general findings, and check status>",
-  "event": "<REQUEST_CHANGES or COMMENT>",
+  "event": "<REQUEST_CHANGES, APPROVE, or COMMENT>",
   "comments": [
     {
       "path": "src/example.py",
@@ -60,8 +60,10 @@ jq -n ... | gh api "repos/$REPO/pulls/$PR/reviews" --method POST --input -
 ~~~
 
 Use REQUEST_CHANGES when at least one confirmed critical or warning finding
-exists and VIEWER is not PR_AUTHOR. Use COMMENT for suggestions, no findings, or
-a self-authored PR. GitHub rejects REQUEST_CHANGES from the PR author.
+exists and VIEWER is not PR_AUTHOR. Use APPROVE when there are no findings and
+VIEWER is not PR_AUTHOR. Use COMMENT for suggestions, unresolved questions, or
+any self-authored PR, including a self-authored no-findings review. GitHub
+rejects REQUEST_CHANGES and APPROVE from the PR author.
 
 For no findings, use an empty comments array and a body that contains
 No findings. For general findings, put the finding blocks in the review body

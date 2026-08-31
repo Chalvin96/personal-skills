@@ -28,7 +28,9 @@ Keep a review ledger in the review notes. Record:
 - one convention-reference entry for every changed source file;
 - one entry for every applicable risk surface: "traced", "not applicable", or "skipped — reason";
 - every applicable lane in the two subagent reviews as "completed",
-  "fallback — main reviewer", "skipped — reason", or "not applicable".
+  "fallback — main reviewer", "skipped — reason", or "not applicable". Use
+  `fallback — main reviewer` only for the naming/specification role; an
+  unavailable independent role is `skipped — independent reviewer unavailable`.
 
 A pass is incomplete until every item in its ledger has a status and evidence.
 
@@ -72,11 +74,23 @@ material working-tree changes and skipped checks. Report each exact tool result
 once; do not re-derive it as a second finding.
 
 Run the Ume mechanical convention checker from the canonical
-ume-conventions references on the exact changed lines before the Ume-rules
-pass:
+`ume-conventions/scripts` directory on the exact changed lines before the
+Ume-rules pass. Resolve `<ume-conventions>` to the absolute directory that
+contains the selected canonical `ume-conventions` skill; prefer the repository's
+`skills/ume-conventions` directory when present, otherwise use the installed
+skill path resolved by the skill registry. Resolve `<repository>` to the
+repository root.
 
 ~~~bash
 git diff --no-color -U0 <base>...HEAD \
+  | python <ume-conventions>/scripts/mechanical_check.py \
+      --root <repository> --diff-stdin
+~~~
+
+For a literal commit range OLD NEW, run exactly:
+
+~~~bash
+git diff --no-color -U0 OLD NEW \
   | python <ume-conventions>/scripts/mechanical_check.py \
       --root <repository> --diff-stdin
 ~~~
@@ -90,7 +104,7 @@ rule applies and matters, and give a concrete fix. Do not report a mechanical
 finding again in the Ume-rules or model pass. Read
 [the mechanical rule table](../ume-conventions/references/mechanical.md) to
 interpret scope and suppression rules. If the checker cannot run, record
-not run — checker unavailable and do not treat a model scan as equivalent
+`not run — checker unavailable`; do not substitute a model scan for this
 deterministic evidence.
 
 For changed Python files, discover the repository's documented Ruff command
@@ -117,60 +131,40 @@ file and changed file and line for a finding. A house-rule finding does not need
 a separate failure scenario, but it must point to changed code and the named
 rule. Do not turn an undocumented preference into a finding.
 
-When the diff adds or renames a production callable, or changes its return or
-side-effect contract, include the naming lane in the convention/specification
-[subagent review](references/subagent-reviews.md). Skip it for tests-only,
-documentation-only, and configuration-only changes.
+Before Pass 3, record whether the naming trigger applies: the diff adds or
+renames a production callable, or changes its return or side-effect contract.
+The naming trigger is not applicable to tests-only, documentation-only, or
+configuration-only changes. Record separately whether an explicit specification
+is present; that trigger applies regardless of changed-file type. Do not
+dispatch a subagent during Pass 2.
 
 For every changed production file, run
 [the comment audit](references/comment-audit.md).
 
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
-comment has been classified, and every naming candidate has been
-verified, deduplicated, admitted, or dropped.
+comment has been classified, and the naming trigger has been recorded for the
+Pass 3 convention/specification review.
 
 ## Pass 3 — model review
 
-Read the diff yourself. Do not delegate the general code review. Use only the
-two roles defined in [subagent reviews](references/subagent-reviews.md): one
-reviewer combines naming and specification checks, and one independent reviewer
-handles elevated-risk changes. Run a role only when its trigger applies and
-delegation is available and authorized.
+Read the diff yourself; do not delegate the general review. The host
+orchestrator owns subagent dispatch. At the start of Pass 3, it dispatches each
+applicable role from
+[subagent reviews](references/subagent-reviews.md) exactly once: the combined
+convention/specification role when either trigger recorded in Pass 2 applies,
+and the independent elevated-risk role when its trigger applies. Do not create
+additional subagent dispatches from Pass 2. If the host cannot dispatch a role,
+follow that role's stated unavailable fallback.
 
-### Trace behavior
+### Boundary and state review
 
-Trace values that carry state across the repository: permissions, status,
-caches, URLs, IDs, transactions, retries, persistence, and external side
-effects. Find other readers and writers before claiming a race, exposure,
-stale state, missing reuse, or a broken contract.
-
-For a changed handler, service operation, job, factory, command, consumer, or
-other integration boundary, trace one level outward to callers and callees.
-Record the caller-visible result, material effects, ownership of commits or
-external calls, and failure or retry behavior.
-
-When the patch changes a public, stored, or published contract, compare its
-producers, consumers, exports, serialized fields, schemas, migrations,
-configuration, generated artifacts, docs, and examples. Skip this check for a
-private internal change with no stored or published contract.
-
-When the change modifies a public or integration boundary, persistent or shared
-state, a transaction boundary, or an external effect, read
-[Contract & State](references/contract-and-state.md). That reference defines
-the required trace, concurrency admission gate, atomic-outcome rule, and
-reporting threshold.
-
-Expand the trace only across applicable risk surfaces: data integrity and
-stored-data or message migrations, concurrency and idempotency, security and
-privacy, backward and forward compatibility, performance and resource use,
-and observability, deployment, and rollback.
-
-Use production-function size as a triage signal, not a defect rule. Exclude
-test modules. For each changed production function over 40 nonblank physical
-lines, check whether it contains multiple responsibilities or an independently
-useful caller-visible subset. Report an issue only when that inspection finds a
-concrete defect or supported house-rule violation.
+When changed code touches a public or integration boundary, persistent or
+shared state, a transaction boundary, or an external effect, read
+[Contract & State](references/contract-and-state.md). Apply its four numbered
+questions, failure-test condition, concurrency admission gate, atomic-outcome
+rule, and reporting threshold. Do not duplicate that reference's tracing or
+40-line guidance here.
 
 Treat complexity, coupling, design smells, and metrics as investigation signals.
 Do not infer a defect from a metric or a SOLID label. Apply the admission gates
@@ -199,10 +193,9 @@ output schema, fallback behavior, and cost or latency evidence.
 
 ### Spec review
 
-When a task, issue, PR body, acceptance-criteria document, ADR, or other
-explicit specification is available, include the specification lane in the
-convention/specification [subagent review](references/subagent-reviews.md). If no explicit
-specification exists, record Spec review: not applicable.
+Use the specification trigger recorded before Pass 3 to decide whether the
+combined convention/specification role includes its specification lane. If no
+explicit specification exists, record Spec review: not applicable.
 
 The model pass is complete when every applicable risk surface has a ledger
 status and trace, every applicable test scenario has evidence or a reason it is
@@ -243,9 +236,12 @@ Then include:
 Use Request changes only for confirmed critical or warning findings and only
 when the authenticated GitHub user is not the PR author. GitHub rejects a
 self-authored Request changes review; submit COMMENT instead and state that
-limitation. Use Comment for suggestions, unresolved questions, or no findings.
-State checks that did not run, including not run — not authorized, not run —
-untrusted source, and not applicable.
+limitation. Use APPROVE for no findings when the reviewer is not the PR author;
+self-authored reviews remain COMMENT. Use Comment for suggestions or unresolved
+questions.
+State checks that did not run, including `not run — not authorized` when the
+check itself requires permission, `not run — untrusted source`, and `not
+applicable`; do not use a check-status label to gate subagent dispatch.
 
 After the user explicitly authorizes posting for a PR target or a branch with an
 associated PR, follow [posting.md](references/posting.md). Without that
