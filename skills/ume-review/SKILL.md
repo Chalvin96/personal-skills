@@ -107,36 +107,22 @@ checker result, Ruff status, and skipped checks all have ledger entries.
 
 ## Pass 2 — Ume rules
 
-Use [Ume Conventions](../ume-conventions/SKILL.md) as a router. Its
-references/*.md files are the canonical, reusable rules; other skills should
-link to those references instead of copying their content.
-
-Always read [testing](../ume-conventions/references/testing.md),
-[simplicity](../ume-conventions/references/simplicity.md),
-[naming](../ume-conventions/references/naming.md), and
-[security](../ume-conventions/references/security.md).
-Read the Python or TypeScript base rules for matching files, then only the
-FastAPI, Django, or React rules supported by repository evidence. If a required
-convention file is missing, record that lane as skipped.
+Follow [Ume Conventions](../ume-conventions/SKILL.md) to select the canonical
+references for every changed source file. Record a required reference that is
+unavailable as skipped.
 
 Apply only conventions supported by repository evidence. Cite the convention
 file and changed file and line for a finding. A house-rule finding does not need
 a separate failure scenario, but it must point to changed code and the named
 rule. Do not turn an undocumented preference into a finding.
 
-Use [naming.md](../ume-conventions/references/naming.md) as the single source
-for callable behavior verbs, Boolean prefixes, effect names, and failure-visible
-names. Do not copy those rules into the review skill.
-
 When the diff adds or renames a production callable, or changes its return or
-side-effect contract, load [the sidecar protocol](references/sidecars.md) and
-run the naming lane. Skip it for tests-only, documentation-only, and
-configuration-only changes. If delegation is unavailable, perform the same
-narrow checklist locally and record the fallback.
+side-effect contract, run the
+[naming sidecar](references/naming-sidecar.md). Skip it for tests-only,
+documentation-only, and configuration-only changes.
 
-For every changed production file, load [the comment audit](references/comment-audit.md).
-Inspect added or modified comments and comments immediately governing changed
-behavior. Classify the audit in the ledger, including the no-finding case.
+For every changed production file, run
+[the comment audit](references/comment-audit.md).
 
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
@@ -147,12 +133,8 @@ verified, deduplicated, admitted, or dropped.
 
 Read the diff yourself. Do not delegate the general code review. For elevated
 risk involving persistence, transactions, authorization, shared state,
-concurrency, public contracts, migrations, or external effects, load the
-independent-review lane in [the sidecar protocol](references/sidecars.md).
-Give that reviewer the diff, requirements, and relevant files, but not the
-implementer's reasoning or conclusions. Verify its findings before reporting
-them. If the lane is unavailable, record it as skipped and do not describe the
-main review as independent.
+concurrency, public contracts, migrations, or external effects, run the
+[independent-review sidecar](references/independent-review-sidecar.md).
 
 ### Trace behavior
 
@@ -216,11 +198,9 @@ output schema, fallback behavior, and cost or latency evidence.
 ### Spec review
 
 When a task, issue, PR body, acceptance-criteria document, ADR, or other
-explicit specification is available, load the spec lane in
-[the sidecar protocol](references/sidecars.md). If no explicit specification
-exists, record Spec review: not applicable. Verify every candidate against
-the specification, diff, and repository before reporting it. Put unresolved
-items in questions.
+explicit specification is available, run the
+[specification sidecar](references/specification-sidecar.md). If no explicit
+specification exists, record Spec review: not applicable.
 
 The model pass is complete when every applicable risk surface has a ledger
 status and trace, every applicable test scenario has evidence or a reason it is
@@ -265,12 +245,9 @@ limitation. Use Comment for suggestions, unresolved questions, or no findings.
 State checks that did not run, including not run — not authorized, not run —
 untrusted source, and not applicable.
 
-For a PR target, or an explicitly authorized branch target with an associated
-PR, read [posting.md](references/posting.md). Post one inline comment for each
-anchorable finding and put unanchored findings in the review body as described
-there. Do not post unresolved candidates, questions, or secrets. If there are no
-findings, post a No findings. review. A working-tree review has terminal output
-only. Verify the posted review URL and state in the handoff.
+After the user explicitly authorizes posting for a PR target or a branch with an
+associated PR, follow [posting.md](references/posting.md). Without that
+authorization, return terminal output only.
 
 Before handoff, confirm that every changed file appears in the ledger, every
 candidate is admitted, dropped, or recorded as a question, findings are

@@ -46,7 +46,10 @@ K_SNAKE_CASE = re.compile(r"^[a-z_][a-z0-9_]*$")
 K_CONSTANT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 K_PASCAL_CASE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 K_HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
-K_NOQA = re.compile(r"(?:#|//).*?(?:noqa|ume-ignore)(?::\s*([^\s]+(?:\s*,\s*[^\s]+)*))?", re.IGNORECASE)
+K_NOQA = re.compile(
+    r"(?:#|//).*?(?:noqa|ume-ignore):\s*([A-Za-z0-9_-]+(?:\s*,\s*[A-Za-z0-9_-]+)*)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -105,7 +108,7 @@ def _suppressed(lines: list[str], line: int, rule: str) -> bool:
         if not match:
             continue
         codes = match.group(1)
-        if not codes or rule.lower() in {code.strip().lower() for code in codes.split(",")}:
+        if rule.lower() in {code.strip().lower() for code in codes.split(",")}:
             return True
     return False
 

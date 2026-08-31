@@ -14,8 +14,9 @@ or modify the target project.
 
 For a review, give the checker the exact changed lines through `--diff-stdin`.
 Report a finding only when its rule ID and line are in the changed diff. The
-checker accepts `# noqa: UME-XXXX` or `# ume-ignore: UME-XXXX` for a deliberate
-exception. Record the exception in the review when it affects a safety rule.
+checker accepts `# noqa: UME-XXXX` or `# ume-ignore: UME-XXXX` with an explicit,
+matching rule ID for a deliberate exception. A bare suppression does not hide a
+Ume finding. Record the exception in the review when it affects a safety rule.
 Rule IDs identify deterministic checks and are internal metadata, not
 human-facing finding summaries. Keep the ID in mechanical-check evidence when
 useful; use the checker's message and repository context to write a

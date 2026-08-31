@@ -7,14 +7,8 @@ authority.
 
 Inspect added or modified comments and comments immediately governing changed
 behavior. Do not audit unrelated comments only because their file was touched.
-Apply the keep, flag, and delete-or-move decisions from
-[simplicity.md](../../ume-conventions/references/simplicity.md). Classify the
-audit in the review ledger, including the no-finding case.
-
-Search knowledge/ before naming a destination. Delete a comment when a clearer
-name, type, test, or structure expresses the reason. Move durable content to
-the relevant knowledge concept or decision record. If no concept fits, identify
-the missing concept.
+Apply that reference's disposition policy and classify the audit in the review
+ledger, including the no-finding case.
 
 Cite [simplicity.md](../../ume-conventions/references/simplicity.md), the
 comment line when changed, or the nearest changed line when the comment is
