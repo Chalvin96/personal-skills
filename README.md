@@ -45,6 +45,10 @@ skills require the globally installed `openspec` command.
 Reviews do not edit target source. PR targets post the finished review only after
 explicit authorization; working-tree reviews produce terminal output.
 
+The Matt Pocock issue workflow skills (`setup-matt-pocock-skills`, `triage`,
+`to-spec`, and `to-tickets`) are included for GitHub issue planning and triage.
+Configure each product repository with `/setup-matt-pocock-skills` before use.
+
 `ume-conventions` is a thin router. Its `references/` files are the canonical
 rules that future implementation and review skills can reuse directly.
 
