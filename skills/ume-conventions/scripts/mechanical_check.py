@@ -591,6 +591,37 @@ def _check_python(
             )
 
 
+def _blank_js_strings(line: str) -> str:
+    """Blank string and template contents so prose cannot read as a declaration.
+
+    A message string containing the words "past the type with a cast" otherwise
+    matches the `type <Name>` shape and reports `with` as a bad type name.
+    """
+    out: list[str] = []
+    quote: str | None = None
+    escaped = False
+    for char in line:
+        if quote is None:
+            out.append(char)
+            if char in "\"'`":
+                quote = char
+            continue
+        if escaped:
+            escaped = False
+            out.append(" ")
+            continue
+        if char == "\\":
+            escaped = True
+            out.append(" ")
+            continue
+        if char == quote:
+            quote = None
+            out.append(char)
+            continue
+        out.append(" ")
+    return "".join(out)
+
+
 def _strip_js_comments(lines: list[str]) -> list[str]:
     result: list[str] = []
     in_block = False
@@ -619,6 +650,21 @@ def _strip_js_comments(lines: list[str]) -> list[str]:
 def _check_javascript(checker: Checker, path: str, text: str, react_dependency: bool) -> None:
     original_lines = text.splitlines()
     lines = _strip_js_comments(original_lines)
+
+    # Comments are stripped below, so the policy-suppression rule reads the originals.
+    for number, raw in enumerate(original_lines, 1):
+        if re.search(
+            r"eslint-disable[\w-]*\s+(?:[^\n]*,\s*)?(?:no-restricted-syntax|no-restricted-imports)\b",
+            raw,
+        ):
+            checker.emit(
+                path,
+                number,
+                "UME-DS002",
+                "project policy rule is switched off at the call site it would have caught",
+                original_lines,
+            )
+
     react_file_evidence = bool(
         re.search(r"(?:from\s+|import\s+|require\(\s*)['\"]react(?:/[^'\"]*)?['\"]", text)
     )
@@ -665,9 +711,11 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
                 original_lines,
             )
 
+        code = _blank_js_strings(line)
+
         function = re.search(
             r"\b(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)",
-            line,
+            code,
         )
         if function and "_" in function.group(1):
             checker.emit(
@@ -680,7 +728,7 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
 
         arrow = re.search(
             r"\b(?:export\s+)?(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>",
-            line,
+            code,
         )
         if arrow and "_" in arrow.group(1):
             checker.emit(
@@ -691,7 +739,33 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
                 original_lines,
             )
 
-        declaration = re.search(r"\b(?:export\s+)?(?:class|interface|type)\s+([A-Za-z_$][\w$]*)", line)
+        important = re.search(
+            r"""(?:className|class)\s*=\s*(?:\{\s*)?["'`][^"'`]*(?<![\w!])!(?:bg|text|border|rounded|shadow|p|m|w|h|min-|max-|flex|grid|gap|inset|top|right|bottom|left|z|opacity|font|leading|tracking)[\w./\[\]-]*""",
+            line,
+        )
+        if important:
+            checker.emit(
+                path,
+                number,
+                "UME-DS001",
+                "`!` forces a utility past the component's own recipe",
+                original_lines,
+            )
+
+        closed_cast = re.search(
+            r"\b(?:className|style)\s*=\s*\{.*?\bas\s+(?:any|never|unknown)\b",
+            line,
+        )
+        if closed_cast:
+            checker.emit(
+                path,
+                number,
+                "UME-DS003",
+                "cast reaches a `className`/`style` past a closed component surface",
+                original_lines,
+            )
+
+        declaration = re.search(r"\b(?:export\s+)?(?:class|interface|type)\s+([A-Za-z_$][\w$]*)", code)
         if declaration and not K_PASCAL_CASE.fullmatch(declaration.group(1)):
             checker.emit(
                 path,

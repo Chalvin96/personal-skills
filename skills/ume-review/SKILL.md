@@ -141,6 +141,13 @@ dispatch a subagent during Pass 2.
 For every changed production file, run
 [the comment audit](references/comment-audit.md).
 
+When the repository has a closed component API or a design system, check whether
+the change reached around it rather than through it. `UME-DS001`-`UME-DS003`
+catch the mechanical cases in Pass 1; the judgement left for this pass is
+whether a new wrapper element, a re-implemented control, or a widened allowlist
+did the same thing legitimately. Treat an added entry in a lint allowlist as a
+design decision that needs a stated reason, not as configuration.
+
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
 comment has been classified, and the naming trigger has been recorded for the

@@ -49,6 +49,9 @@ concrete fix.
 | `UME-TS003` | JavaScript/TypeScript function names containing underscores. |
 | `UME-TS004` | JavaScript/TypeScript class, interface, or type names that are not `PascalCase`. |
 | `UME-REACT001` | A hook call passed directly as another function's argument. |
+| `UME-DS001` | A `!`-forced Tailwind utility inside a `className`, which wins over a component's own recipe. |
+| `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports` — switching off the project's own policy at the call site it would have caught. |
+| `UME-DS003` | A cast (`as any`/`never`/`unknown`) used to pass `className` or `style` to a component whose type refuses them. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -62,6 +65,27 @@ treated as framework code in otherwise generic projects.
 
 `UME-SA002` does not inspect Alembic or migration paths because generated
 migrations commonly use SQLAlchemy `Column` declarations.
+
+## Design-system escapes
+
+`UME-DS001`–`UME-DS003` exist because a closed component API is only as strong
+as the cheapest way around it. A type that refuses `className` stops an honest
+call site and nothing else: a cast, a forced utility, or switching the lint rule
+off at the point it fires all get the same result with less effort than using
+the component properly. These three rules make the bypass itself the thing that
+fails, so the shortcut stops being the path of least resistance.
+
+They are deliberately about the escape, not about styling. Banning palette or
+spacing utilities in feature code is not mechanical — every codebase has
+hundreds of legitimate uses, the rule fires constantly, and it gets switched
+off, which is worse than not having it. What a machine can judge is whether
+someone reached past a boundary that was declared.
+
+None of the three fires on code that uses the design system as intended, so
+adopting them costs nothing on a clean repository. Widening the allowlists that
+these rules depend on is a separate concern: keep a ratchet over the allowlist
+itself, so granting yourself permission is an edit that has to be defended in
+review rather than a quiet line in a config file.
 
 ## Keep these rules in model review
 
