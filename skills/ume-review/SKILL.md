@@ -1,6 +1,6 @@
 ---
 name: ume-review
-description: Review PRs, branches, commit ranges, and working trees for grounded defects and Ume convention violations, prepare clear findings, and post PR reviews only after explicit authorization. Use for code review; use an implementation skill for fixes.
+description: Review PRs, branches, commit ranges, and working trees for defects and Ume convention violations; post authorized PR reviews.
 ---
 
 # Ume Review
@@ -26,15 +26,15 @@ Keep a review ledger in the review notes. Record:
 
 - target provenance, base and head, diff source, trust status, and generated-file exclusions;
 - one convention-reference entry for every changed source file;
-- one entry for every applicable risk surface: "traced", "not applicable", or "skipped — reason";
+- one entry for every applicable risk surface: "traced", "not applicable", or "skipped: reason";
 - every applicable lane in the two subagent reviews as "completed",
-  "fallback — main reviewer", "skipped — reason", or "not applicable". Use
-  `fallback — main reviewer` only for the naming/specification role; an
-  unavailable independent role is `skipped — independent reviewer unavailable`.
+  "fallback: main reviewer", "skipped: reason", or "not applicable". Use
+  `fallback: main reviewer` only for the naming/specification role; an
+  unavailable independent role is `skipped: independent reviewer unavailable`.
 
 A pass is incomplete until every item in its ledger has a status and evidence.
 
-## Pass 1 — mechanical checks
+## Pass 1: mechanical checks
 
 ### Get the diff
 
@@ -104,14 +104,14 @@ rule applies and matters, and give a concrete fix. Do not report a mechanical
 finding again in the Ume-rules or model pass. Read
 [the mechanical rule table](../ume-conventions/references/mechanical.md) to
 interpret scope and suppression rules. If the checker cannot run, record
-`not run — checker unavailable`; do not substitute a model scan for this
+`not run: checker unavailable`; do not substitute a model scan for this
 deterministic evidence.
 
 For changed Python files, discover the repository's documented Ruff command
 from package configuration, task-runner files, CI, or repository documentation.
 Run that read-only command against the changed files when it supports
 file-scoped checks; otherwise run the documented project check. If no configured
-Ruff command exists, record not run — no repository Ruff command. Record
+Ruff command exists, record `not run: no repository Ruff command`. Record
 whether C901 or PLR rules are enabled when complexity is relevant. Ruff
 complexity rules do not enforce a physical line-count limit, so keep the
 40-line review prompt separate from Ruff evidence.
@@ -120,7 +120,7 @@ The mechanical pass is complete when the target, provenance, base, diff source,
 trust status, generated-file exclusions, repository check results, mechanical
 checker result, Ruff status, and skipped checks all have ledger entries.
 
-## Pass 2 — Ume rules
+## Pass 2: Ume rules
 
 Follow [Ume Conventions](../ume-conventions/SKILL.md) to select the canonical
 references for every changed source file. Record a required reference that is
@@ -141,12 +141,21 @@ dispatch a subagent during Pass 2.
 For every changed production file, run
 [the comment audit](references/comment-audit.md).
 
+When the repository has a closed component API or a design system, check whether
+the change reached around it rather than through it. `UME-DS001`-`UME-DS003`
+catch the mechanical cases in Pass 1; the judgement left for this pass is
+whether a new wrapper element, a re-implemented control, or a widened allowlist
+did the same thing legitimately. Treat an added entry in a lint allowlist as a
+design decision that needs a stated reason, not as configuration.
+
+For changed UI, apply [corner-bleed review](references/corner-bleed.md) to changed rounded surfaces.
+
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
 comment has been classified, and the naming trigger has been recorded for the
 Pass 3 convention/specification review.
 
-## Pass 3 — model review
+## Pass 3: model review
 
 Read the diff yourself; do not delegate the general review. The host
 orchestrator owns subagent dispatch. At the start of Pass 3, it dispatches each
@@ -202,7 +211,7 @@ status and trace, every applicable test scenario has evidence or a reason it is
 not covered, and every spec candidate is confirmed, dropped, or moved to
 questions.
 
-## Pass 4 — simplicity
+## Pass 4: simplicity
 
 Run the Ponytail ladder in
 [simplicity](../ume-conventions/references/simplicity.md) after the model pass. Report a
@@ -239,8 +248,8 @@ self-authored Request changes review; submit COMMENT instead and state that
 limitation. Use APPROVE for no findings when the reviewer is not the PR author;
 self-authored reviews remain COMMENT. Use Comment for suggestions or unresolved
 questions.
-State checks that did not run, including `not run — not authorized` when the
-check itself requires permission, `not run — untrusted source`, and `not
+State checks that did not run, including `not run: not authorized` when the
+check itself requires permission, `not run: untrusted source`, and `not
 applicable`; do not use a check-status label to gate subagent dispatch.
 
 After the user explicitly authorizes posting for a PR target or a branch with an

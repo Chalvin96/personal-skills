@@ -49,6 +49,9 @@ concrete fix.
 | `UME-TS003` | JavaScript/TypeScript function names containing underscores. |
 | `UME-TS004` | JavaScript/TypeScript class, interface, or type names that are not `PascalCase`. |
 | `UME-REACT001` | A hook call passed directly as another function's argument. |
+| `UME-DS001` | A `!`-forced Tailwind utility inside a `className`, which wins over a component's own recipe. |
+| `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
+| `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -62,6 +65,23 @@ treated as framework code in otherwise generic projects.
 
 `UME-SA002` does not inspect Alembic or migration paths because generated
 migrations commonly use SQLAlchemy `Column` declarations.
+
+## Design-system escapes
+
+`UME-DS001`–`UME-DS003` flag candidate escapes from a closed component API.
+A cast, forced utility, or disabled lint rule can indicate that a call site
+reached past a declared styling boundary. Confirm the component API and
+repository policy before reporting.
+
+They are deliberately about the escape, not about styling. Banning palette or
+spacing utilities in feature code is not mechanical; every codebase has
+hundreds of legitimate uses, the rule fires constantly, and it gets switched
+off, which is worse than not having it. A machine can flag syntax that warrants
+checking a declared boundary.
+
+These checks flag candidate escapes. Confirm the declared boundary and call
+site before reporting; review allowlist expansions against the repository's
+stated policy.
 
 ## Keep these rules in model review
 

@@ -8,7 +8,7 @@ with OpenSpec.
 - **OpenSpec** starts when the route is clear. It records the proposal, design,
   behavioral requirements, tasks, implementation progress, and archive.
 - **Knowledge** receives only verified, durable current-state facts after the
-  change is implemented—not planning history.
+  change is implemented, excluding planning history.
 
 The result is a deliberate handoff: `wayfinder` for discovery → `grill-me` for
 pressure-testing decisions → OpenSpec for planned and implemented change. The
@@ -44,6 +44,10 @@ skills require the globally installed `openspec` command.
 
 Reviews do not edit target source. PR targets post the finished review only after
 explicit authorization; working-tree reviews produce terminal output.
+
+The issue workflow skills (`setup-matt-pocock-skills`, `triage`, `to-spec`, and
+`to-tickets`) use the repository's configured GitHub, GitLab, or local Markdown
+tracker. Run `/setup-matt-pocock-skills` once per product repository.
 
 `ume-conventions` is a thin router. Its `references/` files are the canonical
 rules that future implementation and review skills can reuse directly.

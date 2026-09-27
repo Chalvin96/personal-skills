@@ -27,7 +27,7 @@ pre-Pass-3 trigger collection marks either lane applicable:
   changed line for each non-met item. Do not invent requirements.
 
 If this subagent is unavailable, perform its applicable checklists locally and
-record `fallback — main reviewer` for each lane.
+record `fallback: main reviewer` for each lane.
 
 ## Independent elevated-risk reviewer
 
@@ -42,8 +42,8 @@ review unrelated changed files, style, naming, specification compliance, or
 the final verdict.
 
 If this subagent is unavailable, record
-`skipped — independent reviewer unavailable`; do not use
-`fallback — main reviewer` for this lane because the main review is not
+`skipped: independent reviewer unavailable`; do not use
+`fallback: main reviewer` for this lane because the main review is not
 independent evidence.
 
 Verify every returned candidate against the diff, repository, and
