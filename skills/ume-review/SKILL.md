@@ -148,6 +148,18 @@ whether a new wrapper element, a re-implemented control, or a widened allowlist
 did the same thing legitimately. Treat an added entry in a lint allowlist as a
 design decision that needs a stated reason, not as configuration.
 
+For changed UI, check rounded surfaces for corner bleed: a container with a
+border radius that does not clip (`overflow` visible) and a child that paints a
+fill, border or divider out to the container's edge without the matching radius
+paints square over the rounded corner. Visual-regression tolerances hide it
+(a corner is a few dozen pixels), so trace it in the code: find each changed or
+newly composed surface with a radius, list the children that reach its edges
+with their own background or border, and confirm the surface clips
+(`overflow-hidden`/`overflow-clip`) or the child carries the radius. Report an
+unclipped edge-to-edge painted child as a defect with the surface, the child
+and the corner. When the repository has an automated corner-bleed check, name
+it in the evidence instead of re-deriving it.
+
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
 comment has been classified, and the naming trigger has been recorded for the
