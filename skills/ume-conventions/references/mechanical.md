@@ -50,8 +50,8 @@ concrete fix.
 | `UME-TS004` | JavaScript/TypeScript class, interface, or type names that are not `PascalCase`. |
 | `UME-REACT001` | A hook call passed directly as another function's argument. |
 | `UME-DS001` | A `!`-forced Tailwind utility inside a `className`, which wins over a component's own recipe. |
-| `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports` — switching off the project's own policy at the call site it would have caught. |
-| `UME-DS003` | A cast (`as any`/`never`/`unknown`) used to pass `className` or `style` to a component whose type refuses them. |
+| `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
+| `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -68,24 +68,20 @@ migrations commonly use SQLAlchemy `Column` declarations.
 
 ## Design-system escapes
 
-`UME-DS001`–`UME-DS003` exist because a closed component API is only as strong
-as the cheapest way around it. A type that refuses `className` stops an honest
-call site and nothing else: a cast, a forced utility, or switching the lint rule
-off at the point it fires all get the same result with less effort than using
-the component properly. These three rules make the bypass itself the thing that
-fails, so the shortcut stops being the path of least resistance.
+`UME-DS001`–`UME-DS003` flag candidate escapes from a closed component API.
+A cast, forced utility, or disabled lint rule can indicate that a call site
+reached past a declared styling boundary. Confirm the component API and
+repository policy before reporting.
 
 They are deliberately about the escape, not about styling. Banning palette or
-spacing utilities in feature code is not mechanical — every codebase has
+spacing utilities in feature code is not mechanical; every codebase has
 hundreds of legitimate uses, the rule fires constantly, and it gets switched
-off, which is worse than not having it. What a machine can judge is whether
-someone reached past a boundary that was declared.
+off, which is worse than not having it. A machine can flag syntax that warrants
+checking a declared boundary.
 
-None of the three fires on code that uses the design system as intended, so
-adopting them costs nothing on a clean repository. Widening the allowlists that
-these rules depend on is a separate concern: keep a ratchet over the allowlist
-itself, so granting yourself permission is an edit that has to be defended in
-review rather than a quiet line in a config file.
+These checks flag candidate escapes. Confirm the declared boundary and call
+site before reporting; review allowlist expansions against the repository's
+stated policy.
 
 ## Keep these rules in model review
 
