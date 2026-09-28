@@ -1,132 +1,107 @@
 ---
 name: wayfinder
-description: Resolve implementation uncertainty as local decision tickets inside an OpenSpec change. Use after proposal/specs when material implementation choices remain. Consolidates decisions into a TRD and dependency-safe cycles without GitHub issues.
+description: Map a large uncertain product or implementation effort as decision tickets. Use explicitly to find the next evidence, settle one decision at a time, and plan implementation only after the product direction is supported.
 ---
 
-# Local Wayfinder
+# Wayfinder
 
-Plan implementation; do not implement production code. The pull to just do the
-work is the signal you have reached the edge of the map — hand off instead.
+Wayfinder finds the route to a named decision or build. It is planning work. Do
+not change production code while using it. First decide which stage the effort
+is in. Keep an untested product idea out of implementation cycles.
 
-## Artifacts
+## Choose the stage
 
-Work only inside `openspec/changes/<change>/`:
+- **Product discovery:** The user, problem, value, or demand is still uncertain.
+  Make an ignored local map under `plans/<effort>/`. Its destination is a product
+  decision and the evidence needed to make it. Do not create OpenSpec behavior
+  specs, a TRD, or build cycles from an untested product guess.
+- **Implementation planning:** The intended user behavior is agreed, but material
+  implementation choices remain. Use the repository's OpenSpec
+  `wayfinder-driven` change. Read the proposal and behavioral specs first. The
+  destination is a technical design and dependency-safe implementation cycles.
 
-- `tickets/index.md`: destination, decision index, status ledger, fog, out of scope.
-- `tickets/D-*.md`: question, evidence, options, decision, consequences.
-- `trd.md`: sole consolidated implementation design.
-- `tasks.md`: sole cycle status ledger.
-- `tasks/C-*.md`: stateless executor packets; no checkboxes.
-- `artifacts/ui/<D-id>/`: accepted visual evidence.
+Read the target repository's `AGENTS.md` and canonical knowledge first. Put the
+map in the repository that owns the planned behavior. If that repository has a
+stricter planning location, follow it. Link prior research instead of copying
+its conclusions into several files.
 
-Use stable IDs and requirement → decision → TRD → cycle traceability. Never use
-GitHub issues. Do not create tickets for obvious mechanics.
+## The map and tickets
 
-`tickets/index.md` is an index, not a store: a decision lives in exactly one
-place — its ticket — so the index gists it and links, never restates it.
+The map is an index. Give it a short **Destination**, **Notes**, **Decisions so
+far**, **Open tickets**, **Not yet specified**, and **Out of scope**. A decision
+lives in its ticket; the map links to it with a one-line summary. Refer to a
+ticket by its linked title in anything the user reads, not by a bare ID.
 
-## Refer by name
+Use stable `D-001`, `D-002`, ... IDs. A ticket records its question, type,
+status, blockers, evidence needed, and decision rule. Once resolved, record the
+evidence, options, decision, and consequences in that same ticket. Mark a
+deferred ticket nonblocking and say why. Do not ticket obvious mechanics.
 
-In everything the user reads, name a ticket by its title, never by a bare id. A
-wall of `D-001, D-002, D-003` is illegible; names read at a glance. The id rides
-inside the name and never stands in for it.
+Ticket types are:
 
-## Index sections
+- `research`: inspect code, data, documents, or outside sources to answer a
+  factual question. An agent can do this alone.
+- `prototype`: make a cheap artifact that a real user can react to. The user's
+  reaction is evidence; the agent cannot invent it.
+- `grilling`: settle a choice that requires the user's preference or authority.
+  Use `$grill-me` when its interview method helps. Never answer for the user.
+- `task`: perform specific work that unlocks a decision, such as a data audit or
+  a recruited user session. Name who must do it and the completion evidence.
 
-- **Destination** — what reaching the end of this map looks like. Name it first;
-  it fixes the scope and shapes every ticket.
-- **Decisions so far** — one line per CLOSED ticket, linked.
-- **Open tickets** — id, name, type, status, blocking, depends_on.
-- **Not yet specified** — in-scope fog.
-- **Out of scope** — work ruled beyond the destination.
+Blocking means the destination cannot be reached until this ticket is resolved.
+For product discovery, make each gate observable. State what a failed result
+changes. Counts from a small pilot are decision aids, not proof of learning or
+market size. Contacting participants or publishing material still needs the
+authorization required by the host and repository.
 
-## Ticket types
+## Chart a map
 
-Every ticket is **HITL** (worked with the user, who speaks for themselves) or
-**AFK** (agent alone). Never answer the human's side of a HITL ticket.
+1. Read the prior plan, relevant knowledge, current product behavior, and any
+   existing map. Name one destination. If the owner or destination is unclear,
+   ask only the decision that cannot be inferred from those sources.
+2. List the sharp questions that block the destination. Put vague future areas
+   under **Not yet specified**. Put work beyond the destination under **Out of
+   scope**. A sharp question is a ticket even if another ticket blocks it.
+3. Create ticket files, then add dependencies. Keep the frontier small enough
+   to see what can be done now. Do not create a task for every possible feature.
+4. Stop after charting. Show the user the map, the first unblocked decision, and
+   the evidence that will settle it. Charting does not count as a product win.
 
-| Type | Mode | Use when |
-|---|---|---|
-| `research` | AFK | A fact outside the working directory blocks a decision. Resolve in a subagent. |
-| `prototype` | HITL | "How should it look or behave" is the question. Build a cheap artifact to react to and link it under `artifacts/`. |
-| `grilling` | HITL | Conversation. The default case. Always invoke `$grill-me`. |
-| `task` | either | Manual work unblocking a decision — provisioning access, moving data so its shape can be seen. Records what was done and the facts later tickets depend on. |
+## Resolve a ticket
 
-Record the type in ticket frontmatter `type:`.
+Choose one unblocked ticket and mark it claimed before work. Research tickets
+can be resolved together when their work is independent. Inspect only the
+evidence needed for the question. Record sources and limitations. For a human
+ticket, wait for the actual human input or observed use. Record the answer in
+the ticket, close it, and add one linked line to **Decisions so far**. Move any
+newly sharp questions out of **Not yet specified** into tickets. Revisit the
+destination if the evidence changes the product direction.
 
-## Fog of war
+## Product discovery handoff
 
-The map is deliberately incomplete. Beyond the live tickets lies fog: decisions
-you can tell are coming but cannot yet pin down. Resolving a ticket clears the
-fog ahead of it and graduates whatever is now specifiable into fresh tickets.
+After every blocking discovery ticket closes, write a short decision record:
+what was observed, what failed, what passed, and the next action. If the product
+bet passes, start a separate implementation plan in the consuming product's
+OpenSpec workflow. If it fails, record the stop or change of direction. Do not
+turn a failed pilot into more feature work by default.
 
-The test is whether you can state the question precisely **now** — not whether
-you can answer it now.
+## Implementation planning in OpenSpec
 
-- **Ticket** when the question is already sharp, even if blocked.
-- **Not yet specified** when you cannot phrase it that sharply. Do not pre-slice
-  fog into ticket-sized pieces; one patch may graduate into several tickets, or
-  none.
+Work inside the selected `openspec/changes/<change>/`:
 
-## Out of scope
+- `tickets/index.md` holds the destination, status, fog, and decision links.
+- `tickets/D-*.md` holds material implementation decisions with stable IDs.
+- `trd.md` is the one consolidated technical design.
+- `tasks/C-*.md` are independently verifiable implementation cycle packets.
+- `tasks.md` alone tracks cycle status with checkboxes.
+- `artifacts/ui/<D-id>/` holds accepted visual evidence when relevant.
 
-Fog gathers only toward the destination, so work past it is out of scope, not
-fog. When an existing ticket turns out to sit past the destination, close it and
-leave one line under **Out of scope** with the gist and why. It stays out of
-**Decisions so far**, which records the route actually walked.
-
-Out-of-scope work never graduates. It returns only if the destination is
-redrawn, and then as a fresh change.
-
-## Chart
-
-1. Read proposal, specs, canonical knowledge, and relevant code.
-2. Name the destination in `tickets/index.md`.
-3. Map the frontier with `$grill-me`, **breadth-first** — fan out across the
-   space rather than deep on one thread. If no fog surfaces, the way is already
-   clear: stop and tell the user no map is needed.
-4. Create only sharp material decisions: architecture, data, migration, rollout,
-   security, performance, integration seams, or UI behavior.
-5. Write `D-*.md` files from the schema template, then wire `depends_on` in a
-   **second pass** — ids must exist before they can reference each other.
-6. Sketch everything still vague into **Not yet specified**.
-7. Fire the `research` tickets as parallel subagents.
-8. Stop. Charting resolves nothing.
-
-## Resolve one ticket
-
-Never resolve more than one ticket per session — `research` excepted.
-
-1. Select one unblocked, unclaimed ticket from `tickets/index.md`; claim it.
-2. Investigate only enough to answer its question. Zoom on demand: read a
-   related or closed ticket's body only when you need it.
-3. Record evidence, rejected options, decision, and consequences in that ticket.
-4. Mark it CLOSED and ready for integration, and append one line to **Decisions
-   so far**. DEFERRED is allowed only when non-blocking and justified.
-5. One integrator incorporates closed decisions into `trd.md` and marks them
-   integrated. Parallel ticket agents must not edit overlapping TRD sections.
-6. Graduate any fog the answer sharpened, clearing that patch from **Not yet
-   specified**. Rule newly out-of-scope work out rather than resolving it. If
-   the decision invalidates other tickets, update or delete them.
-
-Expect concurrent sessions on unblocked tickets.
-
-## UI decisions
-
-Every UI ticket uses `$grill-me`. Read the project's design-system knowledge
-first. Use `grill-me/visual-companion.md` for materially visual questions. Store
-accepted assets under `artifacts/ui/<D-id>/`; express behavior, responsive
-rules, accessibility, and components textually in the ticket and TRD.
-
-## Consolidate and cycle
-
-When all blocking tickets are CLOSED and integrated:
-
-1. Consistency-check the TRD and its requirement/decision traceability.
-2. Mark the TRD IMPLEMENTATION-READY, not frozen; new evidence may reopen a ticket.
-3. Split work into dependency-safe, independently verifiable cycles.
-4. Write `tasks/C-*.md` packets with outcome, scope, procedure, exact tests and
-   commands, rollback, and stop conditions.
-5. Generate `tasks.md` with one checkbox per cycle.
-6. Run OpenSpec strict validation and `wayfinder-validate <change-dir>`.
-7. Hand off to `openspec-apply-change`; do not implement here.
+Use the installed `wayfinder-driven` schema templates. Trace behavioral
+requirement → decision → TRD → cycle. Chart only material choices: data,
+architecture, migration, rollout, security, performance, integration, and UI
+behavior. For UI tickets, read the project's design system and use `$grill-me`
+for human decisions. After all blocking tickets are closed, integrate their
+decisions into the TRD, write dependency-safe cycles with tests, rollback, and
+stop conditions, then run OpenSpec strict validation and
+`wayfinder-validate <change-dir>`. Hand off to `openspec-apply-change`; do not
+implement within Wayfinder.

@@ -98,6 +98,40 @@ class MechanicalCheckSuppressionTest(unittest.TestCase):
         self.assertIn("UME-PY002", result.stdout)
 
 
+    def test_class_assertion_in_feature_test_is_reported(self):
+        result = self.run_checker(
+            "expect(button).toHaveClass('bg-primary');\n",
+            filename="frontend/src/Button.test.tsx",
+        )
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("UME-DS004", result.stdout)
+
+    def test_class_name_read_in_story_is_reported(self):
+        result = self.run_checker(
+            "const tone = chip.className;\n",
+            filename="frontend/src/Chip.stories.tsx",
+        )
+
+        self.assertIn("UME-DS004", result.stdout)
+
+    def test_class_assertion_in_design_system_package_is_exempt(self):
+        result = self.run_checker(
+            "expect(button).toHaveClass('bg-primary');\n",
+            filename="packages/ui/src/button.test.tsx",
+        )
+
+        self.assertNotIn("UME-DS004", result.stdout)
+
+    def test_class_assertion_in_production_source_is_not_reported(self):
+        result = self.run_checker(
+            "const names = element.classList;\n",
+            filename="frontend/src/measure.ts",
+        )
+
+        self.assertNotIn("UME-DS004", result.stdout)
+
+
 class FrameworkEvidenceTest(unittest.TestCase):
     def run_checker(
         self,
