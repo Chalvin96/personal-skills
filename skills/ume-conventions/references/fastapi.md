@@ -58,14 +58,17 @@ Load this extension with `python.md`. These are framework rules, not universal P
 - **Mechanical (`UME-SA002`):** New typed models must not use imported
   SQLAlchemy `Column` or `declarative_base()` constructors. Use the repository's
   typed SQLAlchemy 2.x base, `Mapped[...]`, and `mapped_column()`.
-- Configure relationships with `lazy="raise"`; use `write_only` for
-  collections that should never load wholesale. Choose eager loads per query
-  with `selectinload()` or `joinedload()`.
-- Load only the relationships, rows, and columns required by authorization,
-  business rules, and the response. Avoid unbounded collection loads for
-  previews.
-- Test ORM-backed responses using objects queried in a fresh session.
-  `lazy="raise"` does not prevent relationship loads during flush.
+- For new and changed relationships, set `lazy="raise"`, or
+  `lazy="write_only"` for unbounded collections. Choose eager loads per query
+  with `selectinload()` or `joinedload()`; keep list endpoints free of N+1
+  queries.
+- Load only the relationships and rows that authorization, business rules, and
+  the response need, and defer large columns the response does not show. Build
+  previews from a bounded query: `limit()` or a count.
+- Test ORM-backed responses with objects re-read in a fresh session, so the
+  identity map cannot hide a missing eager load. `raise` guards attribute
+  access only; flush still loads relationships for delete cascades, so test
+  deletes on unloaded objects.
 - Keep persistence writes in the service layer. Use the session to add, change,
   or delete entities there, and make flush/commit/rollback behavior explicit at
   the service or unit-of-work boundary used by the repository.
