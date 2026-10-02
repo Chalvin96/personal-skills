@@ -58,10 +58,14 @@ Load this extension with `python.md`. These are framework rules, not universal P
 - **Mechanical (`UME-SA002`):** New typed models must not use imported
   SQLAlchemy `Column` or `declarative_base()` constructors. Use the repository's
   typed SQLAlchemy 2.x base, `Mapped[...]`, and `mapped_column()`.
-- Make relationship loading explicit for collection and list endpoints. Use
-  `selectinload()` or `joinedload()` when appropriate, and check for accidental
-  lazy-loading and N+1 queries. Do not load a large collection implicitly from
-  a serializer.
+- Configure relationships with `lazy="raise"`; use `write_only` for
+  collections that should never load wholesale. Choose eager loads per query
+  with `selectinload()` or `joinedload()`.
+- Load only the relationships, rows, and columns required by authorization,
+  business rules, and the response. Avoid unbounded collection loads for
+  previews.
+- Test ORM-backed responses using objects queried in a fresh session.
+  `lazy="raise"` does not prevent relationship loads during flush.
 - Keep persistence writes in the service layer. Use the session to add, change,
   or delete entities there, and make flush/commit/rollback behavior explicit at
   the service or unit-of-work boundary used by the repository.
