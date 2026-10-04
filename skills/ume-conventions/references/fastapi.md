@@ -67,10 +67,11 @@ Load this extension with `python.md`. These are framework rules, not universal P
 - Load only the relationships and rows that authorization, business rules, and
   the response need, and defer large columns the response does not show. Build
   previews from a bounded query: `limit()` or a count.
-- Test ORM-backed responses with objects re-read in a fresh session, so the
-  identity map cannot hide a missing eager load. `raise` guards attribute
-  access only; flush still loads `raise` relationships for delete cascades,
-  so test deletes on unloaded objects.
+- Test ORM-backed responses with objects re-read from the database, after
+  `expunge_all()` or in a new session, so the identity map cannot hide a
+  missing eager load. `raise` guards attribute access only; flush still loads
+  `raise` relationships for delete cascades, so test deletes on unloaded
+  objects.
 - Keep persistence writes in the service layer. Use the session to add, change,
   or delete entities there, and make flush/commit/rollback behavior explicit at
   the service or unit-of-work boundary used by the repository.
