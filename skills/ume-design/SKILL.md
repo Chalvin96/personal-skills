@@ -87,3 +87,11 @@ Then confirm the open file's name before writing anything.
   them through the UI.
 - `export_shape` can drop fresh text. For visual proof, select the shape,
   press Shift+2, and take a screenshot instead.
+- The plugin API cannot move shapes between pages, and clipboard paste
+  fails in a headless tab. To split a page:
+  1. Duplicate the page in the UI.
+  2. Open the copy with `penpot.openPage`.
+  3. `remove()` the boards you don't want.
+
+  A duplicated page shares shape ids with the original, and `remove()` acts
+  on the current page, so open the copy first.
