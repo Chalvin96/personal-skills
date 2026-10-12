@@ -16,7 +16,7 @@ environment (exported in `~/.bashrc`):
 | Variable | Meaning |
 | --- | --- |
 | `PENPOT_URL` | Penpot UI base URL |
-| `PENPOT_AGENT_ENV` | Path to the agent credentials file (`PENPOT_EMAIL`, `PENPOT_PASSWORD`) |
+| `PENPOT_AGENT_ENV` | Agent credentials |
 | `PENPOT_BOT_DIR` | Directory of the agent keepalive (`keepalive.mjs`, `.pid`, `.log`) |
 | `PENPOT_FLYT_FILE` | Workspace URL of Flyt's Design System file |
 
@@ -25,9 +25,9 @@ values.
 
 - MCP: the server named `penpot` in your agent config. Its URL carries a user
   token. Never print, log, or paste it.
-- Credentials: read `$PENPOT_AGENT_ENV` only inside the process that logs in.
-  Never echo it, commit it, copy it into a repo, put it in a URL, or show it
-  in a screenshot or transcript. Humans log in with their own account.
+- Credentials: get them from the env, only inside the process that logs in.
+  Never echo, commit, or screenshot them. Humans log in with their own
+  account.
 
 ## Where the design goes
 
