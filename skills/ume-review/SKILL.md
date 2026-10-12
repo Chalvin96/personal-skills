@@ -148,11 +148,13 @@ whether a new wrapper element, a re-implemented control, or a widened allowlist
 did the same thing legitimately. Treat an added entry in a lint allowlist as a
 design decision that needs a stated reason, not as configuration.
 
-When the diff adds a `createContext`, mounts a new provider, or nests a provider
-inside one of the same context, apply the context rules in
-[React](../ume-conventions/references/react.md#context). Report a new context
-whose readers sit one or two levels below a single mount, a nested provider that
-switches behaviour, or a provider value rebuilt every render, citing the rule.
+When the diff adds a project-owned `createContext`, mounts a new production
+provider, or nests a provider inside one of the same context, apply the context
+rules in [React](../ume-conventions/references/react.md#context). Report a new
+context whose readers sit one or two levels below a single mount and that is not
+a compound component's channel, a nested provider that switches behaviour, a
+provider mounted below the lifetime its state needs, or a provider value rebuilt
+every render, citing the rule. Skip third-party, test-only, and story providers.
 
 For changed UI, apply [corner-bleed review](references/corner-bleed.md) to changed rounded surfaces.
 

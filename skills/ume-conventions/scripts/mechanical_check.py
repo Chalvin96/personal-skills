@@ -715,7 +715,8 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
             )
 
         if react_evidence and re.search(
-            r"\bcreateContext\s*(?:<.*?>)?\s*\((?!\s*(?:null|undefined)\b|\s*\)|\s*$)", line
+            r"\bcreateContext\s*(?:<.*?>)?\s*\((?!\s*(?:null|undefined)\b|\s*\)|\s*$)",
+            _blank_js_strings(line),
         ):
             checker.emit(
                 path,
