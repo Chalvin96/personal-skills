@@ -73,13 +73,13 @@ When a context is justified:
   A new value re-renders every consumer, and `React.memo` does not stop a
   context-driven re-render. Split stable actions from fast-changing state when
   consumers only need one of them.
-- Encapsulate the context object. Export the provider and the reading hook;
-  only those two touch the raw context. Callers and tests do not call
-  `useContext(fooContext)` directly.
+- Encapsulate the context object. Callers and tests use the provider and the
+  reading hook, not `useContext(FooContext)`. The raw context is imported only
+  by its provider, its hook, and the exception below.
 - A custom hook cannot be called after an early return or inside a condition.
   When a read must happen there, move it into a child component; if that is
-  worse, read `use(FooContext)` directly and check for `null`. That is the one
-  allowed direct read.
+  worse, read `use(FooContext)` at that site and check for `null`. That is the
+  one allowed direct read.
 - For state that changes often and is read in many places, put a stable store
   instance in context and let consumers subscribe to slices through selectors,
   instead of putting the changing values in context. Context has no selectors.
