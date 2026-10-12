@@ -258,6 +258,15 @@ class FrameworkEvidenceTest(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout)
 
+    def test_context_call_inside_string_is_not_react_finding(self):
+        result = self.run_checker(
+            'import { createContext } from "react";\n'
+            "const example = \"createContext({ allowRetry: true })\";\n",
+            "docs.ts",
+        )
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
     def test_client_checks_are_limited_to_client_modules(self):
         result = self.run_checker(
             "import requests\n"
