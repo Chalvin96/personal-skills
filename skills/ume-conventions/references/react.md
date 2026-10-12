@@ -27,6 +27,37 @@ Keep server state in the query library, URL state in router search parameters,
 and page-local interaction state local. Do not add global state without a real
 shared consumer.
 
+## Context
+
+Context is a dependency-injection channel, not a default way to share data.
+Prefer, in order: props, composition with `children` or slots, a decision made
+by the parent or a registry entry, URL state, the query library for server
+state, and a client store for frequently changing shared state.
+
+Use a context only when all of these hold:
+
+- Props or `children` cannot reasonably carry the value: readers are many
+  levels down or across router outlets, not one or two levels below a single
+  mount.
+- The value is genuinely shared by that subtree: theme, locale, current
+  account, an injected service or store instance, or state a compound
+  component shares with its own children.
+- It is not server state and not URL state.
+
+When a context is justified:
+
+- **Mechanical (`UME-REACT002`):** Give it a `null` or `undefined` default and
+  read it through a hook that throws when the provider is missing. A usable
+  default turns a forgotten provider into silent wrong behaviour.
+- Do not nest a provider to switch behaviour for a subtree, such as an inner
+  `allowRetry={false}` overriding an outer `allowRetry`. Behaviour that varies
+  by caller is a prop or a registry entry, so the rule is visible where it is
+  decided.
+- Keep the provider value referentially stable. Memoize it from its real
+  inputs; an object rebuilt every render re-renders every consumer. Split a
+  rarely read action surface from fast-changing state when consumers only need
+  one of them.
+
 ## Hooks and effects
 
 - Keep hooks unconditional and preserve complete dependency arrays.

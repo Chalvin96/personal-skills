@@ -714,6 +714,17 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
                 original_lines,
             )
 
+        if react_evidence and re.search(
+            r"\bcreateContext\s*(?:<.*?>)?\s*\((?!\s*(?:null|undefined)\b|\s*\)|\s*$)", line
+        ):
+            checker.emit(
+                path,
+                number,
+                "UME-REACT002",
+                "context has a usable default, so a missing provider fails silently",
+                original_lines,
+            )
+
         secret = re.search(
             r"\b(?:API_KEY|SECRET|PASSWORD|PRIVATE_KEY|ACCESS_TOKEN|AUTH_TOKEN|CLIENT_SECRET)\b\s*[:=]\s*(['\"])(.*?)\1",
             line,
