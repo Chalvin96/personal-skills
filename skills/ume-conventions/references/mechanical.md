@@ -49,7 +49,7 @@ concrete fix.
 | `UME-TS003` | JavaScript/TypeScript function names containing underscores. |
 | `UME-TS004` | JavaScript/TypeScript class, interface, or type names that are not `PascalCase`. |
 | `UME-REACT001` | A hook call passed directly as another function's argument. |
-| `UME-REACT002` | `createContext` with a usable default value instead of `null` or `undefined`, so a consumer rendered without its provider silently gets the default. Requires React evidence. |
+| `UME-REACT002` | `createContext` with a usable default value instead of `null` or `undefined`, so a consumer rendered without its provider silently gets the default. Requires React evidence; skips test and story files. A meaningful fallback, such as a default theme, stays with `// ume-ignore: UME-REACT002` and a reason. |
 | `UME-DS001` | A `!`-forced Tailwind utility inside a `className`, which wins over a component's own recipe. |
 | `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
 | `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |

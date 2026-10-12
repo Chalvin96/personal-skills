@@ -267,6 +267,16 @@ class FrameworkEvidenceTest(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout)
 
+    def test_context_default_in_test_or_story_is_allowed(self):
+        for filename in ("mode.test.tsx", "mode.stories.tsx"):
+            result = self.run_checker(
+                'import { createContext } from "react";\n'
+                "const fakeContext = createContext({ allowRetry: true });\n",
+                filename,
+            )
+
+            self.assertEqual(0, result.returncode, result.stdout)
+
     def test_client_checks_are_limited_to_client_modules(self):
         result = self.run_checker(
             "import requests\n"
