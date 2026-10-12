@@ -54,9 +54,23 @@ When a context is justified:
   by caller is a prop or a registry entry, so the rule is visible where it is
   decided.
 - Keep the provider value referentially stable. Memoize it from its real
-  inputs; an object rebuilt every render re-renders every consumer. Split a
-  rarely read action surface from fast-changing state when consumers only need
-  one of them.
+  inputs; an object rebuilt every render re-renders every consumer, and
+  `React.memo` does not stop a context-driven re-render. Split stable actions
+  from fast-changing state when consumers only need one of them.
+- Encapsulate the context object. Export the provider and the reading hook;
+  only those two touch the raw context. Callers and tests never call
+  `useContext(fooContext)` directly.
+- For state that changes often and is read in many places, put a stable store
+  instance in context and let consumers subscribe to slices through selectors,
+  instead of putting the changing values in context. Context has no selectors.
+  A second or third state context for the same feature is a signal to use a
+  store.
+- On React 19, render `<FooContext value={...}>` instead of
+  `<FooContext.Provider>`, which React plans to deprecate. Read with
+  `use(FooContext)` when the read must happen after an early return or inside
+  a condition; otherwise the custom hook is enough.
+- Tests render the consumer inside the real provider, or a provider built from
+  explicit test values. Do not rely on the default to make a test pass.
 
 ## Hooks and effects
 
