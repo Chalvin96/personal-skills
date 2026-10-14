@@ -9,17 +9,17 @@ status: active
 # Mechanical checks
 
 Run `scripts/mechanical_check.py` before the model-based Ume rules pass. The
-checker reads source text and Python ASTs. It does not import, execute, format,
+checker reads CSS, JavaScript/TypeScript source text, and Python ASTs. It does not import, execute, format,
 or modify the target project.
 
 For a review, give the checker the exact changed lines through `--diff-stdin`.
 Report a finding only when its rule ID and line are in the changed diff. The
-checker accepts `# noqa: UME-XXXX` or `# ume-ignore: UME-XXXX` with an explicit,
+checker accepts `# noqa: UME-XXXX` or `ume-ignore: UME-XXXX` in a `#`, `//`, or
+`/* ... */` comment on the same or preceding line with an explicit,
 matching rule ID for a deliberate exception. A bare suppression does not hide a
 Ume finding. Record the exception in the review when it affects a safety rule.
-Rule IDs identify deterministic checks and are internal metadata, not
-human-facing finding summaries. Keep the ID in mechanical-check evidence when
-useful; use the checker's message and repository context to write a
+Keep the rule ID in mechanical-check evidence and cite it in house-rule
+findings. Use the checker's message and repository context to write a
 plain-language finding title, assessment of why it applies and matters, and a
 concrete fix.
 
@@ -54,6 +54,10 @@ concrete fix.
 | `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
 | `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |
 | `UME-DS004` | A `toHaveClass` assertion, or a read of `className`/`classList`, in a test, spec, or story outside `packages/ui`. |
+| `UME-DS005` | A raw literal in a Tailwind arbitrary value or property, including lengths, colours, and numeric values. Scans class candidates in quoted attributes, recipe/helper strings, nested template literals, and CSS `@apply`. Names the nearest known scale/token utility when resolvable. |
+| `UME-DS006` | An arbitrary `var(--token)` class whose token has an equivalent named utility, a background class that reads a role with a different named utility, or a token absent from repository CSS. Discovers `@theme` namespaces and direct `@utility` wrappers. |
+| `UME-DS007` | A raw colour or non-scale length in a CSS declaration outside token definitions. Includes component-local custom properties. Exempts the layout and scale values below. |
+| `UME-DS008` | A discovered palette variable or palette utility read outside the theme layer. Falls back to numbered `--primary-*`, `--secondary-*`, `--accent-*`, `--warning-*`, `--destructive-*`, `--black-*`, and `--white-*` steps. Components read semantic roles. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -68,18 +72,82 @@ treated as framework code in otherwise generic projects.
 `UME-SA002` does not inspect Alembic or migration paths because generated
 migrations commonly use SQLAlchemy `Column` declarations.
 
-## Design-system escapes
+## Design tokens
 
-`UME-DS001`–`UME-DS003` flag candidate escapes from a closed component API.
+Build the token index from all hand-written repository CSS, including unchanged
+files during a diff review. Custom-property declarations supply defined names;
+palette/primitives sheets supply palette names; `@theme` supplies Tailwind
+namespaces. `@utility` rules with one direct `var()` declaration supply named
+wrappers. Do not infer a utility from a variable's spelling. For example,
+`--border-color-strong: var(--border-strong)` proves `border-strong`, while
+`--color-paper` supplies background, text, ring, and other colour utilities.
+Specialized border/background mappings do not prove ring utilities. Valid
+`ring-[var(--border-focused)]` and ring-offset role reads stay when no equivalent
+ring utility exists. A background reading a border role is reported with the
+available utility and a request to choose a background role, without claiming
+that a border utility preserves the paint.
+
+Token definitions are declarations in palette/primitives or theme CSS files,
+`@theme` blocks, and custom properties in `:root`, `:host`, theme attributes,
+or `.theme-*`/`.dark`/`.light` selectors. Ordinary declarations in a `tokens.css`
+file remain checked. Adding a raw custom property to a component selector does
+not make it a token definition.
+
+The final allowances are:
+
+- `UME-DS005` keeps arbitrary selectors, data/group variants, breakpoint
+  variants, keyword/property-list payloads, SVG paths, and zero-only layout
+  values. Layout `%`, `fr`, viewport units, and intrinsic `ch`/`em` dimensions
+  stay. Percentages inside gradients and colour mixing are positions or mix
+  weights. Raw colours inside those expressions still fire. A token-based
+  `calc()` stays. Layout `calc()`/`min()`/`max()` with viewport/intrinsic units or
+  `env()` stay only when their fixed dimensions are on the CSS scale below.
+  Standalone arbitrary pixel/rem values still fire even if a named scale value
+  would match them exactly.
+- `UME-DS007` allows zero in any unit, signed `1px` hairlines, and spatial
+  lengths in half spacing steps. The default `0.25rem` spacing unit gives
+  `2px`/`0.125rem` increments; a discovered `--spacing` overrides the unit for
+  CSS allowances and utility suggestions. Border/outline widths and underline
+  thickness have the narrower pixel scale `0, 1, 2, 3, 4, 8`; `3px` has existing
+  integer border/decoration utilities, while `2.5px` is excluded. Font sizes and line heights
+  use the default Tailwind text scale `12, 14, 16, 18, 20, 24, 30, 36, 48, 60,
+  72, 96, 128px` plus discovered type/leading utilities. Pixel/rem comparisons
+  use a `16px` root. Layout percentages, fractional tracks, viewport units
+  (`vh`, `vw`, `vi`, `vb`, `vmin`, `vmax` and small/large/dynamic variants),
+  and intrinsic `ch`/`em` measures stay on layout properties. Gradient stops
+  and mix percentages stay. `transparent`, `currentColor`, and `inherit` stay;
+  all CSS named colours, hex colours, and literal colour functions fire.
+  A variable alpha does not exempt raw colour channels. Token-supplied channels
+  stay.
+  Token-based `calc()` is exempt only within that expression; raw sibling
+  colours and lengths still fire. Quoted content/font names and URLs are data.
+- `UME-DS006` allows defined tokens with no equivalent utility. `--radix-*`
+  and `--tw-*` are external runtime variables, not missing repository tokens.
+- Test/spec files, test/e2e/fixture directories, Storybook host CSS, generated
+  source with an explicit header, and build/dependency output are excluded
+  from token checks. Authored `.stories.tsx` UI remains checked. Media headers
+  and keyframe selectors are not CSS declarations; their bodies are checked.
+
+Every `UME-DS` finding uses the existing changed-line and explicit-ID
+suppression filter. CSS findings point at the literal, including a changed
+channel in a multiline colour. Full mode inspects every in-scope line.
+
+Run the token regression suite with `python3 -m pytest tests` from the
+`ume-conventions` directory. Tests exercise the CLI, runtime CSS discovery,
+all four rules, suppressions, and diff filtering in temporary repositories.
+
+## Component API escapes
+
+The existing `UME-DS001` through `UME-DS004` retain their meanings and
+explicit-ID suppressions. Token escapes use `UME-DS005` through `UME-DS008`.
+
+`UME-DS001` through `UME-DS003` flag candidate escapes from a closed component API.
 A cast, forced utility, or disabled lint rule can indicate that a call site
 reached past a declared styling boundary. Confirm the component API and
 repository policy before reporting.
 
-They are deliberately about the escape, not about styling. Banning palette or
-spacing utilities in feature code is not mechanical; every codebase has
-hundreds of legitimate uses, the rule fires constantly, and it gets switched
-off, which is worse than not having it. A machine can flag syntax that warrants
-checking a declared boundary.
+They flag syntax that warrants checking a declared component boundary. Token
+escapes have their own deterministic checks and allowances above.
 
 `UME-DS004` is the same boundary seen from the test file. A class string in a
 feature test pins the recipe rather than the contract: it survives a token

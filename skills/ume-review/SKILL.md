@@ -87,6 +87,10 @@ git diff --no-color -U0 <base>...HEAD \
       --root <repository> --diff-stdin
 ~~~
 
+Feed the complete diff, including `.css` files. Do not restrict Pass 1 to
+JavaScript/TypeScript/Python paths. The checker discovers token definitions and
+Tailwind mappings from all repository CSS, including files unchanged by the PR.
+
 For a literal commit range OLD NEW, run exactly:
 
 ~~~bash
@@ -106,6 +110,13 @@ finding again in the Ume-rules or model pass. Read
 interpret scope and suppression rules. If the checker cannot run, record
 `not run: checker unavailable`; do not substitute a model scan for this
 deterministic evidence.
+
+Report confirmed `UME-DS005` through `UME-DS008` results as house-rule findings,
+citing the exact rule in
+[the mechanical rule table](../ume-conventions/references/mechanical.md#design-tokens)
+and the changed file and line. Keep the rule ID with the finding. A token escape
+does not need a separate production failure scenario. Use the available role or
+scale utility in the fix; review a new token's purpose before proposing one.
 
 For changed Python files, discover the repository's documented Ruff command
 from package configuration, task-runner files, CI, or repository documentation.

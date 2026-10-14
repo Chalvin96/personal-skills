@@ -37,6 +37,33 @@ class MechanicalCheckSuppressionTest(unittest.TestCase):
                 text=True,
             )
 
+    def test_original_design_rule_given_existing_syntax_expect_original_id(self):
+        cases = {
+            "UME-DS001": '<Button className="!bg-surface" />;',
+            "UME-DS002": "// eslint-disable-next-line no-restricted-syntax",
+            "UME-DS003": '<Button className={"other" as never} />;',
+            "UME-DS004": 'expect(button).toHaveClass("bg-surface");',
+        }
+        for rule, source in cases.items():
+            with self.subTest(rule=rule):
+                result = self.run_checker(source, filename="frontend/src/Feature.test.tsx")
+                self.assertIn(rule, result.stdout)
+
+    def test_original_design_rule_given_matching_suppression_expect_no_finding(self):
+        cases = {
+            "UME-DS001": '<Button className="!bg-surface" />;',
+            "UME-DS002": "// eslint-disable-next-line no-restricted-syntax",
+            "UME-DS003": '<Button className={"other" as never} />;',
+            "UME-DS004": 'expect(button).toHaveClass("bg-surface");',
+        }
+        for rule, source in cases.items():
+            with self.subTest(rule=rule):
+                result = self.run_checker(
+                    f"// ume-ignore: {rule}\n{source}",
+                    filename="frontend/src/Feature.test.tsx",
+                )
+                self.assertNotIn(rule, result.stdout)
+
     def test_bare_noqa_does_not_suppress_ume_rule(self):
         result = self.run_checker("result = eval(payload)  # noqa\n")
 

@@ -27,6 +27,23 @@ Keep server state in the query library, URL state in router search parameters,
 and page-local interaction state local. Do not add global state without a real
 shared consumer.
 
+## Design tokens
+
+Components consume semantic roles and named scale utilities. Palette steps
+belong in the theme layer, which must be replaceable without changing component
+classes. `UME-DS005` through `UME-DS008` in
+[mechanical.md](mechanical.md#design-tokens) check arbitrary literals, unnecessary
+or undefined token classes, CSS literals, and palette reads.
+
+Keep the token set small and give each token a reusable purpose. Review the
+cases the checker cannot prove: a new token duplicating an existing token,
+a role named after a colour rather than its use, and a component inventing a
+one-off size. Compare the existing scale and role definitions before accepting
+a new token. Collapsing duplicate values needs a meaning check because two
+roles can happen to share a value in one theme. Use role names in the style of
+Atlassian's background, text, border, and state vocabulary. Preserve a swappable
+theme layer for dark mode. Ume's design system does not use orange.
+
 ## Context
 
 These rules cover contexts the project defines in production code.
