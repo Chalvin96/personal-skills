@@ -123,6 +123,7 @@ The final allowances are:
   colours and lengths still fire. Quoted content/font names and URLs are data.
 - `UME-DS006` allows defined tokens with no equivalent utility. `--radix-*`
   and `--tw-*` are external runtime variables, not missing repository tokens.
+  Raw literal fallbacks in those arbitrary classes still fire `UME-DS005`.
 - Test/spec files, test/e2e/fixture directories, Storybook host CSS, generated
   source with an explicit header, and build/dependency output are excluded
   from token checks. Authored `.stories.tsx` UI remains checked. Media headers

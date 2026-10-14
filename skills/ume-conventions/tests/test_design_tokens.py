@@ -578,3 +578,9 @@ def test_raw_class_given_underline_thickness_expect_nearest_utility(tmp_path):
     findings = run_checker(tmp_path, '<div className="decoration-[2.5px]" />')
     assert [finding["rule"] for finding in findings] == ["UME-DS005"]
     assert "decoration-2" in findings[0]["message"]
+
+
+@pytest.mark.parametrize("token", ["--radix-popover-trigger-width", "--tw-custom-size"])
+def test_runtime_token_given_raw_class_fallback_expect_ds005(tmp_path, token):
+    findings = run_checker(tmp_path, f'<div className="w-[var({token},13px)]" />')
+    assert [finding["rule"] for finding in findings] == ["UME-DS005"]

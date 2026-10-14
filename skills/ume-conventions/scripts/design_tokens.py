@@ -377,10 +377,10 @@ def _check_classes(
         )
         if variable:
             token = variable.group(1)
-            if token.startswith(("--radix-", "--tw-")):
-                continue
             named = _named_utility(prefix, token, catalog)
-            if token not in catalog.definitions:
+            if token.startswith(("--radix-", "--tw-")):
+                message = None
+            elif token not in catalog.definitions:
                 message = f"`{candidate}` reads `{token}`, which is not defined in repository CSS"
             elif named:
                 message = f"`{candidate}` bypasses the named token utility `{named}`"
