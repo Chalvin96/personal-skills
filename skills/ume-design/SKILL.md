@@ -5,8 +5,8 @@ description: Route any repo's design work to Ume's self-hosted Penpot — where 
 
 # Ume Design
 
-Thin router to Ume's internal Penpot. It answers three questions, then hands
-off to the `penpot-*` skills for the actual design work.
+Says where a design lives in Ume's Penpot and how to connect, then hands off
+to the `penpot-*` skills for the design work.
 
 ## Setup lives in the environment
 
@@ -20,8 +20,7 @@ environment (exported in `~/.bashrc`):
 | `PENPOT_BOT_DIR` | This skill's `scripts/` (`keepalive.mjs`, `probe.mjs`, `preflight.sh`); pid and log live in `~/.local/state/penpot-bot/` |
 | `PENPOT_FLYT_FILE` | Workspace URL of Flyt's Design System file |
 
-If a variable is unset, stop and ask the owner. Do not guess or search for
-values.
+If a variable is unset, stop and ask the owner for it.
 
 - MCP: the server named `penpot` in your agent config. Its URL carries a user
   token. Never print, log, or paste it.
@@ -54,8 +53,8 @@ plugin is connected to.
    Run `$PENPOT_BOT_DIR/preflight.sh` before Penpot work and before handing
    Penpot work to another agent. It calls `execute_code` through the MCP and
    restarts the keepalive when the plugin is gone; a live PID alone does not
-   mean the plugin is connected. It holds only that one file, so do not
-   repoint it at another file without asking. Flyt work depends on it.
+   mean the plugin is connected. It holds only that one file; ask before
+   repointing it, because Flyt work depends on it.
 2. **Human tab (any other file).** Open the file in a browser, choose File →
    MCP Server → Connect, and keep that tab visible. A backgrounded tab makes
    calls time out.
@@ -65,14 +64,13 @@ Then confirm the open file's name before writing anything.
 
 ## Then hand off
 
-1. Read `~/.penpot-ai-kit/AGENTS.md` and follow it: tokens first, never
-   one-shot, suggest then apply with review.
+1. Read and follow `~/.penpot-ai-kit/AGENTS.md`.
 2. Use `penpot-router` to pick exactly one `penpot-*` skill. For example,
    `penpot-build-from-code` for code → screen, and `penpot-build-screen` for
    a brief → screen.
 3. For Flyt designs, the `norsk` frontend's CSS custom properties are the source of truth for tokens. Snap
-   values to the nearest existing token and never add a token just to match
-   a measurement.
+   values to the nearest existing token; the token set grows only by owner
+   decision.
 
 ## Penpot 2.15 traps
 
