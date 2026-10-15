@@ -50,6 +50,9 @@ K_NOQA = re.compile(
     r"(?:#|//).*?(?:noqa|ume-ignore):\s*([A-Za-z0-9_-]+(?:\s*,\s*[A-Za-z0-9_-]+)*)",
     re.IGNORECASE,
 )
+K_TEST_SOURCE = re.compile(r"\.(?:test|spec|stories)\.[cm]?[jt]sx?$")
+K_CLASS_ASSERTION = re.compile(r"\.(?:toHaveClass|className|classList)\b")
+K_CLASS_ASSERTION_EXEMPT_DIRS = ("packages/ui/",)
 
 
 @dataclass(frozen=True)
@@ -622,6 +625,19 @@ def _blank_js_strings(line: str) -> str:
     return "".join(out)
 
 
+def _is_class_assertion_scope(path: str) -> bool:
+    """Whether the class-assertion rule reaches a path.
+
+    A class string is only the unit under test where the recipe itself is the
+    subject: the design-system package's own tests. The exemption is the package
+    path, so a feature test cannot opt itself in by picking a filename.
+    """
+    if not K_TEST_SOURCE.search(path):
+        return False
+    normalised = Path(path).as_posix()
+    return not normalised.startswith(K_CLASS_ASSERTION_EXEMPT_DIRS)
+
+
 def _strip_js_comments(lines: list[str]) -> list[str]:
     result: list[str] = []
     in_block = False
@@ -669,6 +685,7 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
         re.search(r"(?:from\s+|import\s+|require\(\s*)['\"]react(?:/[^'\"]*)?['\"]", text)
     )
     react_evidence = react_dependency or react_file_evidence
+    class_assertion_scope = _is_class_assertion_scope(path)
     for number, line in enumerate(lines, 1):
         if re.search(r"(?::\s*any\b|\bas\s+any\b|<\s*any\s*>|\bArray\s*<\s*any\s*>)", line):
             checker.emit(
@@ -712,6 +729,17 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
             )
 
         code = _blank_js_strings(line)
+
+        if class_assertion_scope and K_CLASS_ASSERTION.search(code):
+            checker.emit(
+                path,
+                number,
+                "UME-DS004",
+                "class assertion pins the recipe, not the contract; assert the "
+                "`data-state`, the role, or the accessible name, and delete the "
+                "assertion when nothing perceives the difference",
+                original_lines,
+            )
 
         function = re.search(
             r"\b(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)",

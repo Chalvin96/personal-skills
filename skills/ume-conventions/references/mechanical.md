@@ -52,6 +52,7 @@ concrete fix.
 | `UME-DS001` | A `!`-forced Tailwind utility inside a `className`, which wins over a component's own recipe. |
 | `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
 | `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |
+| `UME-DS004` | A `toHaveClass` assertion, or a read of `className`/`classList`, in a test, spec, or story outside `packages/ui`. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -78,6 +79,21 @@ spacing utilities in feature code is not mechanical; every codebase has
 hundreds of legitimate uses, the rule fires constantly, and it gets switched
 off, which is worse than not having it. A machine can flag syntax that warrants
 checking a declared boundary.
+
+`UME-DS004` is the same boundary seen from the test file. A class string in a
+feature test pins the recipe rather than the contract: it survives a token
+rename that changed nothing, and it fails on a class rename that changed
+nothing. Inside the design-system package a `cva` recipe's output genuinely is
+the unit under test, so those assertions stay — the exemption is the package
+path `packages/ui/`, not a list of permitted files, so a new feature test cannot
+opt itself in by picking a filename. What the assertion was protecting decides
+the replacement: assert the `data-state`, the role, `aria-checked`/
+`aria-pressed`, or the accessible name when the learner can perceive the state,
+and delete the assertion when nothing does — appearance belongs to the visual
+suite, not to a class name matched in a unit test. Reading `className` or
+`classList` is the same assertion in another spelling and is reported the same
+way, except in the design-system package, where a test may legitimately compare
+rendered markup to prove a closed surface rejected injected props.
 
 These checks flag candidate escapes. Confirm the declared boundary and call
 site before reporting; review allowlist expansions against the repository's
