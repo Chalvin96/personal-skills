@@ -87,8 +87,7 @@ git diff --no-color -U0 <base>...HEAD \
       --root <repository> --diff-stdin
 ~~~
 
-Feed the complete diff, including `.css` files. Do not restrict Pass 1 to
-JavaScript/TypeScript/Python paths. The checker discovers token definitions and
+Feed the complete diff, including `.css` files. The checker discovers token definitions and
 Tailwind mappings from all repository CSS, including files unchanged by the PR.
 
 For a literal commit range OLD NEW, run exactly:

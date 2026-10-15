@@ -42,7 +42,8 @@ one-off size. Compare the existing scale and role definitions before accepting
 a new token. Collapsing duplicate values needs a meaning check because two
 roles can happen to share a value in one theme. Use role names in the style of
 Atlassian's background, text, border, and state vocabulary. Preserve a swappable
-theme layer for dark mode. Ume's design system does not use orange.
+theme layer for dark mode. Warm accents use amber or a cooler red; orange is
+excluded from Ume's design system.
 
 ## Context
 
