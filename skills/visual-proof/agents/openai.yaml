@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Proof"
+  short_description: "Capture and review UI change triptychs"
+  default_prompt: "Create a visual proof triptych for these UI changes."
