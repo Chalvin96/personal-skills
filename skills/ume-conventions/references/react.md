@@ -57,12 +57,11 @@ When a context is justified:
   such as a default theme, may keep it; mark the line with
   `// ume-ignore: UME-REACT002` and the reason. The checker reads one line, so
   it misses a default on the next line and an aliased `createContext` import.
-- Do not nest a provider of the same context to switch behaviour for a
-  subtree, such as an inner `allowRetry={false}` overriding an outer
-  `allowRetry`. Behaviour that varies by caller is a prop or a registry entry,
-  so the rule is visible where it is decided. Nesting that supplies different
-  data of the same kind is fine: a nested theme, a second instance of a
-  compound component, a form section.
+- Pass behaviour that varies by caller as a prop or a registry entry, so the
+  rule is visible where it is decided. A nested provider of the same context
+  supplies different data of the same kind: a nested theme, a second instance
+  of a compound component, a form section. An inner `allowRetry={false}`
+  overriding an outer `allowRetry` is behaviour, so it is a prop.
 - Mount the provider at the level that matches the state's intended lifetime.
   A provider under a layout route resets when the user crosses to another
   layout; mount it above the layouts when the state must survive that
@@ -89,7 +88,7 @@ When a context is justified:
   `<FooContext.Provider>` still works, and React plans to deprecate it in a
   future version.
 - Tests render the consumer inside the real provider, or a provider built from
-  explicit test values. Do not rely on the default to make a test pass.
+  explicit test values.
 
 ## Hooks and effects
 
