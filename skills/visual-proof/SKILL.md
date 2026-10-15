@@ -1,6 +1,6 @@
 ---
 name: visual-proof
-description: Capture and review before/after Storybook screenshots for visible UI changes, with a triptych at every requested story and width.
+description: "Before | after | pixel-diff triptychs of Storybook stories across widths, with real changes split from anti-aliasing noise on one review page. Use when a change is visible in the UI, a visual baseline moves, or the owner asks for screenshots, a diff, or proof before choosing."
 ---
 
 # Visual proof
