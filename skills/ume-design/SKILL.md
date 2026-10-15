@@ -17,7 +17,7 @@ environment (exported in `~/.bashrc`):
 | --- | --- |
 | `PENPOT_URL` | Penpot UI base URL |
 | `PENPOT_AGENT_ENV` | Agent credentials |
-| `PENPOT_BOT_DIR` | Directory of the agent keepalive (`keepalive.mjs`, `.pid`, `.log`) |
+| `PENPOT_BOT_DIR` | This skill's `scripts/` (`keepalive.mjs`, `probe.mjs`, `preflight.sh`); pid and log live in `~/.local/state/penpot-bot/` |
 | `PENPOT_FLYT_FILE` | Workspace URL of Flyt's Design System file |
 
 If a variable is unset, stop and ask the owner. Do not guess or search for
@@ -51,9 +51,11 @@ plugin is connected to.
 
 1. **Agent keepalive (default for Flyt).** `$PENPOT_BOT_DIR/keepalive.mjs`
    keeps `$PENPOT_FLYT_FILE` open in headless Chromium as the agent account.
-   If the PID in `$PENPOT_BOT_DIR/keepalive.pid` is alive, the MCP is already
-   connected to that file. It holds only that one file, so do not repoint it
-   at another file without asking. Flyt work depends on it.
+   Run `$PENPOT_BOT_DIR/preflight.sh` before Penpot work and before handing
+   Penpot work to another agent. It calls `execute_code` through the MCP and
+   restarts the keepalive when the plugin is gone; a live PID alone does not
+   mean the plugin is connected. It holds only that one file, so do not
+   repoint it at another file without asking. Flyt work depends on it.
 2. **Human tab (any other file).** Open the file in a browser, choose File →
    MCP Server → Connect, and keep that tab visible. A backgrounded tab makes
    calls time out.
