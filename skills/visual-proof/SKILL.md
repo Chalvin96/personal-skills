@@ -5,24 +5,32 @@ description: "Before | after | pixel-diff triptychs of Storybook stories across 
 
 # Visual proof
 
-Use the entry point from the target repository:
+`<skill>` below is the directory holding this file.
 
-```bash
-node /path/to/visual-proof/scripts/visual-proof.mjs \
-  --stories story-id,another-story --widths 320,768 \
-  --env KEY=VALUE --out visual-proof
-```
+1. Once per machine, install the capture browser: `pnpm install --dir <skill>`.
+2. From the target repository, capture, diff, and serve the review page. For
+   Flyt, read [references/flyt.md](references/flyt.md) first for its flags.
 
-Open the generated `index.html`. Review every **change** capture by eye, then
-the noise list, and report what moved and whether it was intended. The owner
-always gets the triptych page before being asked to choose.
+   ```bash
+   node <skill>/scripts/visual-proof.mjs \
+     --stories story-id,another-story --widths 320,768 \
+     --env KEY=VALUE --out visual-proof --serve
+   ```
+
+3. Open the printed URL. Give every **change** capture a verdict, intended or
+   not, by the rules under **Judging a change**, then scan the noise list. The step is done when every change capture
+   has a verdict.
+4. Send the owner the page link with those verdicts before asking them to
+   choose anything.
+
+## Judging a change
 
 Establish the intended target before judging. Confirm that the two captures are
 comparable in viewport, DPR, route, state, data, fonts, and assets. Inspect the
 boundaries of each changed effect before judging the whole frame. Metrics locate
 differences; they never decide correctness.
 
-For Flyt, read [references/flyt.md](references/flyt.md) before capturing.
+## Running one step
 
 Run one step alone with `scripts/capture.mjs`, `scripts/diff.mjs`, or
 `scripts/page.mjs` when the preceding artifacts already exist. The page server
