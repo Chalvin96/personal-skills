@@ -235,6 +235,48 @@ class FrameworkEvidenceTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("UME-REACT001", result.stdout)
 
+    def test_context_with_usable_default_is_react_finding(self):
+        result = self.run_checker(
+            'import { createContext } from "react";\n'
+            "export const modeContext = createContext({ allowRetry: true });\n",
+            "mode.ts",
+        )
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("UME-REACT002", result.stdout)
+
+    def test_context_with_null_default_is_allowed(self):
+        result = self.run_checker(
+            'import { createContext } from "react";\n'
+            "export const lookupContext = createContext<Lookup<Value> | null>(null);\n"
+            "export const otherContext = createContext<Other | undefined>(undefined);\n"
+            "export const splitContext = createContext<Split | null>(\n"
+            "  null,\n"
+            ");\n",
+            "lookup.ts",
+        )
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
+    def test_context_call_inside_string_is_not_react_finding(self):
+        result = self.run_checker(
+            'import { createContext } from "react";\n'
+            "const example = \"createContext({ allowRetry: true })\";\n",
+            "docs.ts",
+        )
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
+    def test_context_default_in_test_or_story_is_allowed(self):
+        for filename in ("mode.test.tsx", "mode.stories.tsx"):
+            result = self.run_checker(
+                'import { createContext } from "react";\n'
+                "const fakeContext = createContext({ allowRetry: true });\n",
+                filename,
+            )
+
+            self.assertEqual(0, result.returncode, result.stdout)
+
     def test_client_checks_are_limited_to_client_modules(self):
         result = self.run_checker(
             "import requests\n"
