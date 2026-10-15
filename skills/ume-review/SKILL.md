@@ -112,7 +112,7 @@ deterministic evidence.
 
 Report confirmed `UME-DS005` through `UME-DS008` results as house-rule findings,
 citing the exact rule in
-[the mechanical rule table](../ume-conventions/references/mechanical.md#design-tokens)
+[the mechanical rule table](../ume-conventions/references/mechanical.md#rules-enforced-by-the-checker)
 and the changed file and line. Keep the rule ID with the finding. A token escape
 does not need a separate production failure scenario. Use the available role or
 scale utility in the fix; review a new token's purpose before proposing one.
