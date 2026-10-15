@@ -1,20 +1,21 @@
 ---
 name: wayfinder
-description: Map a large uncertain product or implementation effort as decision tickets. Use explicitly to find the next evidence, settle one decision at a time, and plan implementation only after the product direction is supported.
+description: Map a large uncertain product or implementation effort as decision tickets and settle them one at a time.
+disable-model-invocation: true
 ---
 
 # Wayfinder
 
-Wayfinder finds the route to a named decision or build. It is planning work. Do
-not change production code while using it. First decide which stage the effort
-is in. Keep an untested product idea out of implementation cycles.
+Wayfinder finds the route to a named decision or build. It produces plans and
+decisions; code changes happen afterwards in `openspec-apply-change`. First
+decide which stage the effort is in. Keep an untested product idea out of
+implementation cycles.
 
 ## Choose the stage
 
 - **Product discovery:** The user, problem, value, or demand is still uncertain.
   Make an ignored local map under `plans/<effort>/`. Its destination is a product
-  decision and the evidence needed to make it. Do not create OpenSpec behavior
-  specs, a TRD, or build cycles from an untested product guess.
+  decision and the evidence needed to make it.
 - **Implementation planning:** The intended user behavior is agreed, but material
   implementation choices remain. Use the repository's OpenSpec
   `wayfinder-driven` change. Read the proposal and behavioral specs first. The
@@ -35,7 +36,8 @@ ticket by its linked title in anything the user reads, not by a bare ID.
 Use stable `D-001`, `D-002`, ... IDs. A ticket records its question, type,
 status, blockers, evidence needed, and decision rule. Once resolved, record the
 evidence, options, decision, and consequences in that same ticket. Mark a
-deferred ticket nonblocking and say why. Do not ticket obvious mechanics.
+deferred ticket nonblocking and say why. Ticket only questions that need
+evidence or a decision.
 
 Ticket types are:
 
@@ -63,9 +65,9 @@ authorization required by the host and repository.
    under **Not yet specified**. Put work beyond the destination under **Out of
    scope**. A sharp question is a ticket even if another ticket blocks it.
 3. Create ticket files, then add dependencies. Keep the frontier small enough
-   to see what can be done now. Do not create a task for every possible feature.
+   to see what can be done now.
 4. Stop after charting. Show the user the map, the first unblocked decision, and
-   the evidence that will settle it. Charting does not count as a product win.
+   the evidence that will settle it.
 
 ## Resolve a ticket
 
@@ -82,8 +84,7 @@ destination if the evidence changes the product direction.
 After every blocking discovery ticket closes, write a short decision record:
 what was observed, what failed, what passed, and the next action. If the product
 bet passes, start a separate implementation plan in the consuming product's
-OpenSpec workflow. If it fails, record the stop or change of direction. Do not
-turn a failed pilot into more feature work by default.
+OpenSpec workflow. If it fails, record the stop or change of direction.
 
 ## Implementation planning in OpenSpec
 
@@ -103,5 +104,4 @@ behavior. For UI tickets, read the project's design system and use `$grill-me`
 for human decisions. After all blocking tickets are closed, integrate their
 decisions into the TRD, write dependency-safe cycles with tests, rollback, and
 stop conditions, then run OpenSpec strict validation and
-`wayfinder-validate <change-dir>`. Hand off to `openspec-apply-change`; do not
-implement within Wayfinder.
+`wayfinder-validate <change-dir>`. Hand off to `openspec-apply-change`.
