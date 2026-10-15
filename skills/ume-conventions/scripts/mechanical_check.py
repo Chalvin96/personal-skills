@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Run deterministic Ume convention checks on changed source files.
 
-The checker uses Python's AST for Python files and conservative regular
-expressions for JavaScript and TypeScript files. It never imports or executes
+The checker uses Python's AST for Python files and conservative source scans
+for CSS, JavaScript, and TypeScript files. It never imports or executes
 the target project.
 """
 
@@ -18,8 +18,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
 
+from design_tokens import check_design_tokens, discover_tokens, is_generated_source
 
-K_SOURCE_SUFFIXES = {".js", ".jsx", ".py", ".pyi", ".ts", ".tsx"}
+
+K_SOURCE_SUFFIXES = {".css", ".js", ".jsx", ".py", ".pyi", ".ts", ".tsx"}
 K_SKIP_DIRS = {".git", ".mypy_cache", ".pytest_cache", "__pycache__", "build", "dist", "node_modules"}
 K_TRANSPORT_MODULES = {"aiohttp", "httpx", "requests", "urllib"}
 K_HTTP_METHODS = {"delete", "get", "head", "patch", "post", "put", "request"}
@@ -47,7 +49,7 @@ K_CONSTANT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 K_PASCAL_CASE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 K_HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 K_NOQA = re.compile(
-    r"(?:#|//).*?(?:noqa|ume-ignore):\s*([A-Za-z0-9_-]+(?:\s*,\s*[A-Za-z0-9_-]+)*)",
+    r"(?:#|//|/\*).*?(?:noqa|ume-ignore):\s*([A-Za-z0-9_-]+(?:\s*,\s*[A-Za-z0-9_-]+)*)",
     re.IGNORECASE,
 )
 K_TEST_SOURCE = re.compile(r"\.(?:test|spec|stories)\.[cm]?[jt]sx?$")
@@ -961,6 +963,7 @@ def main() -> int:  # noqa: UME-PY003 — CLI entrypoint follows parser helpers.
     source_paths = _collect_source_paths(root, inputs)
     checker = Checker(root, changed_lines)
     all_source_paths = _collect_source_paths(root, ["."])
+    token_catalog = discover_tokens(all_source_paths)
     existing = {relative for relative, _ in all_source_paths}
     django_evidence = _has_django_evidence(root) or _has_python_import_in_sources(all_source_paths, "django")
     sqlalchemy_dependency = _has_dependency_evidence(root, "sqlalchemy")
@@ -973,6 +976,8 @@ def main() -> int:  # noqa: UME-PY003 — CLI entrypoint follows parser helpers.
             text = file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
+        if is_generated_source(text):
+            continue
         if file.suffix.lower() in {".py", ".pyi"}:
             _check_python(
                 checker,
@@ -982,8 +987,12 @@ def main() -> int:  # noqa: UME-PY003 — CLI entrypoint follows parser helpers.
                 sqlalchemy_evidence,
                 fastapi_evidence,
             )
-        else:
+        elif file.suffix.lower() != ".css":
             _check_javascript(checker, relative, text, react_dependency)
+
+        if file.suffix.lower() not in {".py", ".pyi"}:
+            for finding in check_design_tokens(relative, text, token_catalog):
+                checker.emit(relative, finding.line, finding.rule, finding.message, text.splitlines(), finding.related_lines)
 
     _check_client_layout(checker, [relative for relative, _ in source_paths], existing, fastapi_evidence)
     checker.findings.sort(key=lambda finding: (finding.path, finding.line, finding.rule))

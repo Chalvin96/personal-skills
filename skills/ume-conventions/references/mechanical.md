@@ -9,17 +9,17 @@ status: active
 # Mechanical checks
 
 Run `scripts/mechanical_check.py` before the model-based Ume rules pass. The
-checker reads source text and Python ASTs. It does not import, execute, format,
+checker reads CSS, JavaScript/TypeScript source text, and Python ASTs. It does not import, execute, format,
 or modify the target project.
 
 For a review, give the checker the exact changed lines through `--diff-stdin`.
 Report a finding only when its rule ID and line are in the changed diff. The
-checker accepts `# noqa: UME-XXXX` or `# ume-ignore: UME-XXXX` with an explicit,
+checker accepts `# noqa: UME-XXXX` or `ume-ignore: UME-XXXX` in a `#`, `//`, or
+`/* ... */` comment on the same or preceding line with an explicit,
 matching rule ID for a deliberate exception. A bare suppression does not hide a
 Ume finding. Record the exception in the review when it affects a safety rule.
-Rule IDs identify deterministic checks and are internal metadata, not
-human-facing finding summaries. Keep the ID in mechanical-check evidence when
-useful; use the checker's message and repository context to write a
+Keep the rule ID in mechanical-check evidence and cite it in the body of a
+house-rule finding; the finding summary stays plain language. Use the checker's message and repository context to write a
 plain-language finding title, assessment of why it applies and matters, and a
 concrete fix.
 
@@ -54,6 +54,10 @@ concrete fix.
 | `UME-DS002` | `eslint-disable` of `no-restricted-syntax` or `no-restricted-imports`, switching off the project's own policy at the call site it would have caught. |
 | `UME-DS003` | A cast inside a JSX `className` or `style` prop; confirm that the target component's API excludes the prop before reporting. |
 | `UME-DS004` | A `toHaveClass` assertion, or a read of `className`/`classList`, in a test, spec, or story outside `packages/ui`. |
+| `UME-DS005` | A raw literal in a Tailwind arbitrary value or property, including lengths, colours, and numeric values. Scans class candidates in quoted attributes, recipe/helper strings, nested template literals, and CSS `@apply`. Names the nearest known scale/token utility when resolvable. |
+| `UME-DS006` | An arbitrary `var(--token)` class whose token has an equivalent named utility, a background class that reads a role with a different named utility, or a token absent from repository CSS. Discovers `@theme` namespaces and direct `@utility` wrappers. |
+| `UME-DS007` | A raw colour or non-scale length in a CSS declaration outside token definitions. Includes component-local custom properties. Exempts the layout and scale values below. |
+| `UME-DS008` | A discovered palette variable or palette utility read outside the theme layer. Falls back to numbered `--primary-*`, `--secondary-*`, `--accent-*`, `--warning-*`, `--destructive-*`, `--black-*`, and `--white-*` steps. Components read semantic roles. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove
@@ -68,18 +72,28 @@ treated as framework code in otherwise generic projects.
 `UME-SA002` does not inspect Alembic or migration paths because generated
 migrations commonly use SQLAlchemy `Column` declarations.
 
-## Design-system escapes
+## Design tokens
 
-`UME-DS001`–`UME-DS003` flag candidate escapes from a closed component API.
+`UME-DS005` through `UME-DS008` index every token from all hand-written
+repository CSS, including files the diff leaves unchanged, then flag literals
+and palette reads that bypass it. Read
+[design-token-allowances.md](design-token-allowances.md) before reporting a hit
+you suspect is legitimate: it lists how the index is built and every value the
+checker deliberately allows.
+
+Every `UME-DS` finding uses the existing changed-line and explicit-ID
+suppression filter. CSS findings point at the literal, including a changed
+channel in a multiline colour. Full mode inspects every in-scope line.
+
+## Component API escapes
+
+`UME-DS001` through `UME-DS003` flag candidate escapes from a closed component API.
 A cast, forced utility, or disabled lint rule can indicate that a call site
 reached past a declared styling boundary. Confirm the component API and
 repository policy before reporting.
 
-They are deliberately about the escape, not about styling. Banning palette or
-spacing utilities in feature code is not mechanical; every codebase has
-hundreds of legitimate uses, the rule fires constantly, and it gets switched
-off, which is worse than not having it. A machine can flag syntax that warrants
-checking a declared boundary.
+They flag syntax that warrants checking a declared component boundary. Token
+escapes have their own deterministic checks and allowances above.
 
 `UME-DS004` is the same boundary seen from the test file. A class string in a
 feature test pins the recipe rather than the contract: it survives a token
