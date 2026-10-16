@@ -20,6 +20,9 @@ environment (exported in `~/.bashrc`):
 | `PENPOT_BOT_DIR` | This skill's `scripts/` (`keepalive.mjs`, `probe.mjs`, `preflight.sh`); pid and log live in `~/.local/state/penpot-bot/` |
 | `PENPOT_FLYT_FILE` | Workspace URL of Flyt's Design System file |
 
+Agent shells are non-interactive and don't read `~/.bashrc`, so
+`preflight.sh` loads any missing `PENPOT_*` lines from it itself.
+
 If a variable is unset, stop and ask the owner for it.
 
 - MCP: the server named `penpot` in your agent config. Its URL carries a user
