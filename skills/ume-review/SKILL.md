@@ -168,10 +168,26 @@ every render, citing the rule.
 
 For changed UI, apply [corner-bleed review](references/corner-bleed.md) to changed rounded surfaces.
 
+Run the [magic domain identifier lane](references/magic-identifiers.md) on
+changed executable JavaScript and TypeScript. Look for repeated finite
+provider/model IDs, action or reason codes, route anchors, event types, and
+status discriminants; trace each candidate to its canonical type, API schema,
+enum, or constant before reporting it. User-facing copy, router-owned paths,
+generated files, and unrelated local literals are not findings. Record the
+lane status and bounded search evidence in the ledger.
+
+When the diff adds a backend module inside an application or domain package,
+check its placement against the module-placement rule in
+[FastAPI](../ume-conventions/references/fastapi.md#routes-and-schemas) or
+[Django](../ume-conventions/references/django.md#views-and-services). A new
+module that holds domain logic a sibling service module should own is a
+house-rule finding.
+
 The Ume-rules pass is complete when every changed source file has its selected
 reference entry, every applicable rule has been considered, every in-scope
-comment has been classified, and the naming trigger has been recorded for the
-Pass 3 convention/specification review.
+comment has been classified, the magic-identifier lane has a status, and the
+naming trigger has been recorded for the Pass 3 convention/specification
+review.
 
 ## Pass 3: model review
 

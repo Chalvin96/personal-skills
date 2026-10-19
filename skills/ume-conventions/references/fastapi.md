@@ -28,6 +28,11 @@ Load this extension with `python.md`. These are framework rules, not universal P
   must not mutate state, commit a transaction, or perform an unrelated side
   effect. Do not add command buses, query buses, or generic repositories only to
   satisfy this rule.
+- Put an application's domain logic, including small pure calculations such as
+  a derived duration or score, in that application's service module
+  (`services.py` or `service.py`). Add a separate module only for a cohesive
+  unit with its own responsibility and tests, such as tokenization or a parser;
+  a one-function module beside the service module is a placement finding.
 - Keep ORM models declarative and do not put HTTP concerns in services.
 - Use explicit Pydantic request and response models. Do not return internal ORM or domain objects directly when the response contract should be stable.
 - Declare response models, status codes, and error responses when they are part of the API contract.
