@@ -126,9 +126,45 @@ whether C901 or PLR rules are enabled when complexity is relevant. Ruff
 complexity rules do not enforce a physical line-count limit, so keep the
 40-line review prompt separate from Ruff evidence.
 
+### Changed-line hook findings
+
+For a branch, PR, or commit-range target in a repository with a pre-commit
+configuration, run the changed-line hook reporter on the reviewed head.
+Run the script only when the reviewed head is checked out; otherwise record the hook step `not applicable`.
+
+~~~bash
+python <ume-review>/scripts/changed_line_hooks.py <base> --repo <repository>
+~~~
+
+`<ume-review>` resolves the same way as `<ume-conventions>` above. The
+reporter builds a temporary clean worktree of the reviewed head and discovers
+the configured hooks with a verbose run. When several hooks apply, it reruns
+each hook from the reviewed snapshot so formatter edits cannot shift later
+linter coordinates. It removes the worktree through git and never writes to
+the user's checkout. It prints one JSON object and exits 0 when
+clean, 1 when changed lines carry hook findings or formatter rewrites, and
+2 when the hooks could not run. A failed hook without a parseable diagnostic
+or a file rewrite is `could-not-run`, even when it printed a summary. Cleanup
+errors stay in the JSON report; they preserve an existing failure code and
+turn an otherwise clean result into exit 2.
+
+- Keep hook findings whose `file:line` falls on a changed line. Confirm each
+  against the source, then report it once in the normal finding format with a
+  plain-language summary; the hook name and rule stay in the evidence.
+- Findings on unchanged lines are pre-existing: record the dropped count from
+  the report and do not report them.
+- A formatter rewrite on a changed line is a suggestion-level finding: the
+  repository's own formatter would change that line. Show the reported before
+  and after as the fix.
+- Record exit 2 as `not run: <reason from the report>`. A repository without a
+  pre-commit configuration is `not applicable: no pre-commit configuration`.
+  For a working-tree-only target, record
+  `not applicable: uncommitted lines are not reachable from a committed head`.
+
 The mechanical pass is complete when the target, provenance, base, diff source,
 trust status, generated-file exclusions, repository check results, mechanical
-checker result, Ruff status, and skipped checks all have ledger entries.
+checker result, Ruff status, changed-line hook report, and skipped checks all
+have ledger entries.
 
 ## Pass 2: Ume rules
 
@@ -199,6 +235,13 @@ convention/specification role when either trigger recorded in Pass 2 applies,
 and the independent elevated-risk role when its trigger applies. Do not create
 additional subagent dispatches from Pass 2. If the host cannot dispatch a role,
 follow that role's stated unavailable fallback.
+
+### Second opinion
+
+When asked for another agent's opinion or review, send a read-only,
+findings-only brief naming the diff range and what to check. Verify every
+returned finding against the code before reporting or fixing it, and state
+which findings held up.
 
 ### Boundary and state review
 
@@ -285,6 +328,13 @@ questions.
 State checks that did not run, including `not run: not authorized` when the
 check itself requires permission, `not run: untrusted source`, and `not
 applicable`; do not use a check-status label to gate subagent dispatch.
+
+### Plain-language pass
+
+If the `simplified-technical-english` skill is installed, run the finished
+review prose through it as the final step before presenting or posting.
+Rewrite prose only. Code, paths, identifiers, severities, and quoted text stay
+byte-for-byte.
 
 After the user explicitly authorizes posting for a PR target or a branch with an
 associated PR, follow [posting.md](references/posting.md). Without that
