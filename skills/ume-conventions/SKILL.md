@@ -40,6 +40,32 @@ Do not select a framework from a filename alone. If detection is ambiguous, stat
 
 For file types outside this bundle, apply `testing.md`, `simplicity.md`, `naming.md`, and `security.md`, state that the type-specific lane is not covered, and do not infer language rules from the extension alone.
 
+## Shared concerns
+
+Some rules follow the behavior being changed rather than the language a file
+is written in. Match the change against the table, then read only the named
+section. A schema, background task, or migration can carry a write contract,
+a repeat, or a race even though nothing else in the diff looks like it.
+
+| Change kind | Section |
+| --- | --- |
+| Duplicate delivery, retries, or partial failure around external effects | [Work that can arrive twice or stop midway](references/reliability.md#work-that-can-arrive-twice-or-stop-midway) |
+| Concurrent writers, stale ORM objects, writing only intended fields | [State written by more than one writer](references/reliability.md#state-written-by-more-than-one-writer) |
+| Deleting or replacing an interface other code consumes | [Removing a shared interface](references/reliability.md#removing-a-shared-interface) |
+| New status, flag, or second representation of a domain state | [Domain shape](references/data-modeling.md#domain-shape) |
+| Input crossing a trust boundary | [Boundary validation](references/data-modeling.md#boundary-validation) |
+| Compound inputs to a service operation, partial-update semantics | [Service inputs](references/data-modeling.md#service-inputs) |
+| Where new code or a moved function should live | [Placement](references/data-modeling.md#placement) |
+| Side effects of a business operation | [Effect ownership](references/data-modeling.md#effect-ownership) |
+| Added or changed comments and lint/type suppressions | [Comments and suppressions](references/comments.md) |
+
+Read these sections with bounded reads: list the reference's headings first,
+then read the selected section through its subsections and stop where a
+heading of equal or higher level begins. Record each section you applied and
+why it was selected. Check every read for truncation and recover the missing
+range before applying a rule from it. The always-read set above is read
+whole, not by section.
+
 ## Precedence
 
 Apply rules in this order:
