@@ -69,8 +69,9 @@ the model change, deploy safety, and compatibility.
 Inspect the target provenance, base and head, and changed executable or
 configuration files before running commands. Do not execute untrusted branch or
 fork code. Run the repository's read-only format, lint, type, and test checks.
-Do not run auto-fix formatters or hooks that write to the checkout. Record
-material working-tree changes and skipped checks. Report each exact tool result
+Do not run auto-fix formatters or hooks that write to the user's checkout.
+The changed-line reporter's temporary worktree is the exception described below.
+Record material working-tree changes and skipped checks. Report each exact tool result
 once; do not re-derive it as a second finding.
 
 Run the Ume mechanical convention checker from the canonical
@@ -129,7 +130,10 @@ complexity rules do not enforce a physical line-count limit, so keep the
 ### Changed-line hook findings
 
 For a branch, PR, or commit-range target in a repository with a pre-commit
-configuration, run the changed-line hook reporter on the reviewed head.
+configuration, run the changed-line hook reporter only when the target is trusted:
+a same-repository branch the user owns or asked to check. Running hooks executes
+repository code, including code from the reviewed commit. For a fork or untrusted
+source, record `not run: untrusted source` and do not run the reporter.
 Run the script only when the reviewed head is checked out; otherwise record the hook step `not applicable`.
 
 ~~~bash
@@ -138,13 +142,19 @@ python <ume-review>/scripts/changed_line_hooks.py <base> --repo <repository>
 
 `<ume-review>` resolves the same way as `<ume-conventions>` above. The
 reporter builds a temporary clean worktree of the reviewed head and discovers
-the configured hooks with a verbose run. When several hooks apply, it reruns
-each hook from the reviewed snapshot so formatter edits cannot shift later
-linter coordinates. It removes the worktree through git and never writes to
+the configured hooks with a verbose run. It compares the merge base of `<base>`
+and HEAD to HEAD, and reports both `base` and `merge_base` in JSON. For a literal
+commit range, run it only if OLD is an ancestor of the checked-out NEW; otherwise
+record `not applicable: reporter uses merge-base semantics`. When several hooks
+apply, it reruns each unique hook ID once from the reviewed snapshot so formatter
+edits cannot shift later linter coordinates. It removes the worktree through git and never writes to
 the user's checkout. It prints one JSON object and exits 0 when
-clean, 1 when changed lines carry hook findings or formatter rewrites, and
-2 when the hooks could not run. A failed hook without a parseable diagnostic
-or a file rewrite is `could-not-run`, even when it printed a summary. Cleanup
+clean or `not applicable`, 1 when changed lines carry hook findings or formatter
+rewrites, and 2 when the hooks could not run. If pre-commit exits 0 without any
+parsed hook results, record `not applicable` with the reported reason, never
+`clean`. A failed hook without a parseable diagnostic
+or a file rewrite is `could-not-run`, even when it printed a summary. Unresolved
+diagnostic paths do not count as dropped unchanged findings. Cleanup
 errors stay in the JSON report; they preserve an existing failure code and
 turn an otherwise clean result into exit 2.
 

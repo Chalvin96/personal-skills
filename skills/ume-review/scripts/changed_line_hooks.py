@@ -3,7 +3,7 @@
 
 The reporter builds a temporary worktree of the reviewed head, runs the
 repository's pre-commit hooks there, and never modifies the user's checkout.
-It prints one JSON object and exits 0 when clean, 1 when changed lines carry
+It prints one JSON object and exits 0 when clean or not applicable, 1 when changed lines carry
 hook findings or formatter rewrites, and 2 when the hooks could not run.
 """
 
@@ -16,8 +16,10 @@ import subprocess
 import sys
 import tempfile
 from json import dumps
+from os import environ, fsdecode
 from pathlib import Path
 from shutil import rmtree
+from signal import SIGINT, SIGTERM, SIG_IGN, Signals, signal as set_signal_handler
 
 COLOR_CODES = re.compile(r"\x1b\[[0-9;]*m")
 HOOK_HEADER = re.compile(r"^(?P<name>.+?)\.{2,}\s*(?P<result>Passed|Failed|Skipped)$")
@@ -36,11 +38,20 @@ class CouldNotRun(Exception):
         self.reason = reason
 
 
+def repository_environment() -> dict[str, str]:
+    return {key: value for key, value in environ.items() if not key.startswith("GIT_")}
+
+
+def interrupted(number: int, _frame: object) -> None:
+    raise CouldNotRun(f"interrupted by {Signals(number).name}")
+
+
 def run_git(repo: Path, *args: str) -> bytes:
     try:
         completed = subprocess.run(
             ["git", *args],
             cwd=repo,
+            env=repository_environment(),
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -64,8 +75,8 @@ def changed_line_map(repo: Path, base: str, head: str) -> dict[str, set[int]]:
     for status in entries:
         if not status:
             continue
-        original = next(entries).decode()
-        path = next(entries).decode() if status.startswith(b"R") else original
+        original = fsdecode(next(entries))
+        path = fsdecode(next(entries)) if status.startswith(b"R") else original
         diff = run_git(
             repo,
             "diff",
@@ -94,19 +105,18 @@ def create_worktree(repo: Path, head: str, directory: Path) -> None:
     run_git(repo, "worktree", "add", "--detach", str(directory), head)
 
 
-def remove_worktree(repo: Path, directory: Path) -> None:
-    errors: list[str] = []
+def remove_worktree(repo: Path, directory: Path, report: dict) -> None:
     try:
         run_git(repo, "worktree", "remove", "--force", str(directory))
     except CouldNotRun as error:
-        errors.append(error.reason)
+        errors = [error.reason]
         rmtree(directory, ignore_errors=True)
-    try:
-        run_git(repo, "worktree", "prune")
-    except CouldNotRun as error:
-        errors.append(error.reason)
-    if errors:
-        raise CouldNotRun("; ".join(errors))
+        report["worktree_prune_ran"] = True
+        try:
+            run_git(repo, "worktree", "prune")
+        except CouldNotRun as prune_error:
+            errors.append(prune_error.reason)
+        raise CouldNotRun("; ".join(errors)) from error
 
 
 def snapshot_files(worktree: Path, changed: dict[str, set[int]]) -> dict[str, list[bytes]]:
@@ -129,6 +139,7 @@ def run_pre_commit(
         return subprocess.run(
             command,
             cwd=worktree,
+            env=repository_environment(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             check=False,
@@ -161,7 +172,8 @@ def diagnostic_path(raw: str, worktree: Path) -> str:
     if not path.is_absolute():
         path = worktree / path
     try:
-        return path.resolve().relative_to(worktree.resolve()).as_posix()
+        relative = path.resolve().relative_to(worktree.resolve()).as_posix()
+        return relative if path.is_file() else ""
     except ValueError:
         return ""
 
@@ -183,7 +195,7 @@ def collect_findings(
         if hook_id:
             current["id"] = hook_id.group("identifier")
             continue
-        finding = FINDING.match(raw_line)
+        finding = FINDING.match(re.sub(r"^\s*-->\s*", "", raw_line))
         if finding is not None:
             path = diagnostic_path(finding.group("path"), worktree)
         else:
@@ -191,7 +203,7 @@ def collect_findings(
             path = stylish_path
         if finding is None:
             candidate = diagnostic_path(raw_line, worktree)
-            if candidate in changed:
+            if raw_line.strip() and not raw_line[0].isspace():
                 stylish_path = candidate
             continue
         line = int(finding.group("line"))
@@ -199,7 +211,7 @@ def collect_findings(
         message = (finding.group("message") or "").strip()
         if line in changed.get(path, set()):
             kept.append({"path": path, "line": line, "hook": hook, "message": message})
-        else:
+        elif path:
             dropped += 1
     return kept, dropped
 
@@ -242,7 +254,7 @@ def collect_rewrites(
 
 def inspect_hooks(worktree: Path, changed: dict[str, set[int]], snapshots: dict) -> dict:
     completed = run_pre_commit(worktree, changed)
-    sections = parse_sections(completed.stdout.decode(errors="replace"))
+    sections = parse_sections(completed.stdout.decode(errors="surrogateescape"))
     if completed.returncode != 0 and not any(
         section["result"] == "Failed" for section in sections
     ):
@@ -254,27 +266,39 @@ def inspect_hooks(worktree: Path, changed: dict[str, set[int]], snapshots: dict)
         "dropped_unchanged_findings": 0,
         "dropped_unchanged_rewrites": 0,
     }
+    if not sections:
+        report.update(status="not applicable", reason="pre-commit returned no hook summaries")
+        return report
+    seen: set[str] = set()
     for section in sections:
+        identifier = section["id"] or section["name"]
+        if identifier in seen:
+            continue
+        seen.add(identifier)
         if len(sections) > 1:
             if not section["id"]:
                 raise CouldNotRun("cannot isolate hook without a hook id")
             run_git(worktree, "reset", "--hard", "HEAD")
             run_git(worktree, "clean", "-fdx")
             completed = run_pre_commit(worktree, changed, section["id"])
-        output = completed.stdout.decode(errors="replace")
+        output = completed.stdout.decode(errors="surrogateescape")
         results = parse_sections(output)
-        if len(results) != 1:
-            raise CouldNotRun("expected one isolated hook summary")
-        result = results[0]
+        if not results or any(
+            (result["id"] or result["name"]) != identifier for result in results
+        ):
+            raise CouldNotRun("expected summaries for the isolated hook")
+        failed = any(result["result"] == "Failed" for result in results)
         findings, dropped_findings = collect_findings(output, changed, worktree)
         rewrites, dropped_rewrites = collect_rewrites(worktree, snapshots, changed)
         accounted = findings or rewrites or dropped_findings or dropped_rewrites
-        if result["result"] == "Failed" and not accounted:
-            hook = result["id"] or result["name"]
+        if failed and not accounted:
+            hook = identifier
             raise CouldNotRun(f"hook {hook} failed without diagnostics or rewrites")
-        if completed.returncode != 0 and result["result"] != "Failed":
+        if completed.returncode != 0 and not failed:
             raise CouldNotRun(f"pre-commit exited {completed.returncode} without a failed hook")
-        report["hooks"].append({"id": result["id"] or result["name"], "result": result["result"]})
+        report["hooks"].extend(
+            {"id": identifier, "result": result["result"]} for result in results
+        )
         report["findings"].extend(findings)
         report["formatter_rewrites"].extend(rewrites)
         report["dropped_unchanged_findings"] += dropped_findings
@@ -297,13 +321,16 @@ def main() -> int:
     repo: Path | None = None
     report: dict = {}
     exit_code = 0
+    previous_handlers = {}
     try:
-        repo = Path(
-            run_git(Path(args.repo).resolve(), "rev-parse", "--show-toplevel").decode().strip()
-        )
+        for number in (SIGTERM, SIGINT):
+            previous_handlers[number] = set_signal_handler(number, interrupted)
+        root = run_git(Path(args.repo).resolve(), "rev-parse", "--show-toplevel")
+        repo = Path(fsdecode(root).strip())
         base = resolve_revision(repo, args.base)
         head = resolve_revision(repo, "HEAD")
-        changed = changed_line_map(repo, base, head)
+        merge_base = run_git(repo, "merge-base", base, head).decode().strip()
+        changed = changed_line_map(repo, merge_base, head)
         worktree = Path(tempfile.mkdtemp(prefix="ume-changed-line-hooks-"))
         create_worktree(repo, head, worktree)
         if not (worktree / ".pre-commit-config.yaml").is_file():
@@ -311,6 +338,7 @@ def main() -> int:
         report = {
             "status": "clean",
             "base": base,
+            "merge_base": merge_base,
             "head": head,
             "hooks": [],
             "findings": [],
@@ -324,26 +352,28 @@ def main() -> int:
         else:
             report["note"] = "no changed files in the range"
         exit_code = 1 if report["status"] == "findings" else 0
-    except CouldNotRun as error:
-        report = {
-            "status": "could-not-run",
-            "reason": error.reason,
-            "findings": [],
-            "formatter_rewrites": [],
-        }
+    except Exception as error:
+        report.update(
+            status="could-not-run", reason=str(error), findings=[], formatter_rewrites=[]
+        )
         exit_code = 2
     finally:
+        for number in previous_handlers:
+            set_signal_handler(number, SIG_IGN)
+        report["worktree_prune_ran"] = False
         if worktree is not None and repo is not None:
             try:
-                remove_worktree(repo, worktree)
-            except CouldNotRun as error:
-                report["cleanup_error"] = error.reason
-                if exit_code == 0:
+                remove_worktree(repo, worktree, report)
+            except Exception as error:
+                report["cleanup_error"] = str(error)
+                if exit_code == 0 or not isinstance(error, CouldNotRun):
                     exit_code = 2
                     report["status"] = "could-not-run"
-                    report["reason"] = error.reason
+                    report["reason"] = str(error)
         report["worktree_removed"] = worktree is None or not worktree.exists()
         emit(report)
+        for number, handler in previous_handlers.items():
+            set_signal_handler(number, handler)
     return exit_code
 
 

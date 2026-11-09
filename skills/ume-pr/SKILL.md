@@ -18,8 +18,7 @@ A request to publish authorizes the push and draft-PR creation for that
 branch; the prepared body needs no second approval. With a prepare-only
 request, hand back the drafted text and the plan for publishing, and touch
 nothing on the remote. Updating an existing PR follows
-[publishing](references/publishing.md). Rewriting published history always
-needs its own explicit approval.
+[publishing](references/publishing.md).
 
 ## Read the whole range first
 

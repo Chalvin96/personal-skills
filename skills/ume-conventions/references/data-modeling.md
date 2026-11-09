@@ -34,8 +34,9 @@ each be the place a mistake lands.
 
 ## Boundary validation
 
-- Validate untrusted input once, at the edge, with Pydantic request models at
-  the route. Services receive typed, already-validated objects.
+- Validate untrusted input once, at the edge, with the repository's validator:
+  Pydantic request models for FastAPI, forms or serializers for Django, or
+  schema parsing for TypeScript. Services receive typed, already-validated objects.
 - Inside the boundary, trust the types and do not re-validate in every layer.
   When a service genuinely must defend itself, that is a signal it serves two
   kinds of callers; make the split explicit instead of copying checks.

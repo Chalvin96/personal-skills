@@ -8,37 +8,8 @@ status: active
 
 # Comments and suppressions
 
-The test for every comment: would a competent reader with the code in front of
-them reach a wrong conclusion without it? If not, delete it.
-[simplicity.md](simplicity.md) owns the wider comment and knowledge-placement
-policy; this file adds the suppression rules and the shared dispositions.
-
-## What a comment may keep
-
-- A constraint the code cannot state: why this value, this order, or this
-  awkward call is required by something outside the file (a protocol quirk, a
-  provider limit, a platform behavior, a security or accessibility
-  requirement).
-- A deliberate trade-off with a known ceiling, kept short, when no name, type,
-  test, or structure can carry it.
-- Public API documentation that defines a caller contract, and links to a
-  decision record or issue that explains a constraint.
-
-## What must go
-
-- Narration: restating what the next statement obviously does.
-- Commented-out code, section banners, and TODOs with no owner or action.
-- Domain behavior, product rules, thresholds, history, and operational policy
-  written as comments; these belong in the repository's knowledge area. Move
-  them there instead of leaving them beside the code, per
-  [simplicity.md](simplicity.md#comments-and-knowledge).
-- A comment that a better name, type, or test would make redundant. Improve
-  the code first; keep the comment only when that is genuinely unavailable.
-
-Before deleting a comment that claims to protect something, check nearby code
-and recorded rationale: if the constraint is real, encode it in a test or
-knowledge doc rather than silently removing both the comment and the safety
-it described.
+[simplicity.md](simplicity.md#comments-and-knowledge) owns comment discipline
+and knowledge placement. This file adds suppression rules.
 
 ## Suppressions
 

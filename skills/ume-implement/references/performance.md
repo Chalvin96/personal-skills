@@ -15,9 +15,8 @@ nothing to anyone.
 
 Spend the first change on waste the profile actually shows, for example:
 
-- One query per loop iteration (N+1). Under SQLAlchemy's `lazy="raise"`
-  setting the ORM refuses implicit relationship loads, so add explicit
-  loading (`selectinload`, `joinedload`) where the loop walks relationships.
+- One query per loop iteration (N+1). Follow the relationship-loading rules in
+  [FastAPI conventions](../../ume-conventions/references/fastapi.md#sqlalchemy-2x).
 - Round trips that pile up: a remote service called once per item when one
   batched request would do.
 - React components re-rendering far more often than their data changes.

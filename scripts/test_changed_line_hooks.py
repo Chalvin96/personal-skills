@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from importlib.util import module_from_spec, spec_from_file_location
 from shutil import which
+from signal import SIGINT, SIGTERM
 from unittest.mock import patch
 
 
@@ -92,6 +93,7 @@ def build_repo(root: Path) -> tuple[Path, str]:
     app = repo / "src" / "app.py"
     app.parent.mkdir()
     app.write_text(K_BASE_APP, encoding="utf-8")
+    (app.parent / "other.py").write_text("other = 1\n", encoding="utf-8")
     (repo / ".pre-commit-config.yaml").write_text(K_PRE_COMMIT_CONFIG, encoding="utf-8")
     run_git(repo, "add", ".")
     run_git(repo, "commit", "-q", "-m", "base")
@@ -117,11 +119,13 @@ def run_reporter(
     path_dirs: list[str],
     *,
     keep_path: bool = True,
+    overrides: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess:
     env = dict(os.environ)
     extra = os.pathsep.join(path_dirs)
     suffix = env["PATH"] if keep_path else ""
     env["PATH"] = os.pathsep.join([part for part in (extra, suffix) if part])
+    env.update(overrides or {})
     command = [sys.executable, str(K_SCRIPT), "--repo", str(repo), base]
     return subprocess.run(
         command,
@@ -393,7 +397,9 @@ class ChangedLineHooksTest(unittest.TestCase):
                 original = module.run_git
 
                 def git(repo, *args):
-                    if args[:2] == ('worktree', cleanup):
+                    if args[:2] == ('worktree', cleanup) or (
+                        cleanup == 'prune' and args[:2] == ('worktree', 'remove')
+                    ):
                         raise module.CouldNotRun(f'{cleanup} failed')
                     return original(repo, *args)
 
@@ -411,6 +417,205 @@ class ChangedLineHooksTest(unittest.TestCase):
                 self.assertEqual(1, code)
                 self.assertEqual('findings', report['status'])
                 self.assertEqual(bool(cleanup), bool(report.get('cleanup_error')))
+
+
+    def test_stylish_header_resets_for_unchanged_file(self) -> None:
+        for second_line in (2, 3):
+            with self.subTest(second_line=second_line):
+                result, report = self.run_hook(
+                    "print('ESLint........................Failed')\n"
+                    "print('- hook id: eslint')\n"
+                    "print('src/app.py')\n"
+                    "print('  3:1  warning  old problem')\n"
+                    "print('src/other.py')\n"
+                    f"print('  {second_line}:1  error  other problem')\n"
+                    "sys.exit(1)\n"
+                )
+                self.assertEqual(0, result.returncode)
+                self.assertEqual([], report['findings'])
+                self.assertEqual(2, report['dropped_unchanged_findings'])
+
+    def test_git_environment_cannot_touch_user_checkout(self) -> None:
+        binary = install_fake_pre_commit(
+            self.root,
+            f"#!{sys.executable}\nimport sys\n"
+            "hook = sys.argv[2] if sys.argv[2] != '--color=never' else None\n"
+            "for name in ('first', 'second') if hook is None else (hook,):\n"
+            "    print(f'{name}........................Passed')\n"
+            "    print(f'- hook id: {name}')\n",
+        )
+        app = self.repo / 'src/app.py'
+        for overrides in ({'GIT_DIR': str(self.repo / '.git'),
+                           'GIT_WORK_TREE': str(self.repo),
+                           'GIT_INDEX_FILE': str(self.repo / '.git/index')}, {}):
+            with self.subTest(overrides=bool(overrides)):
+                app.write_text('precious dirty work\n')
+                result = run_reporter(self.repo, self.base, [str(binary)], overrides=overrides)
+                self.assertEqual('precious dirty work\n', app.read_text())
+                self.assertEqual(0, result.returncode, result.stdout)
+
+    def test_ruff_full_locations_and_unresolved_paths(self) -> None:
+        for path, line, expected in (('src/app.py', 2, 1), ('src/app.py', 3, 0),
+                                     ('missing.py', 2, 2)):
+            with self.subTest(path=path, line=line):
+                result, report = self.run_hook(
+                    "print('Ruff........................Failed')\n"
+                    "print('- hook id: ruff')\n"
+                    f"print('  --> {path}:{line}:8')\n"
+                    "sys.exit(1)\n"
+                )
+                self.assertEqual(expected, result.returncode)
+                if expected == 2:
+                    self.assertEqual('could-not-run', report['status'])
+                    self.assertEqual(self.base, report['base'])
+                    self.assertEqual(self.base, report['merge_base'])
+                else:
+                    self.assertEqual(1 - expected, report['dropped_unchanged_findings'])
+
+    def test_range_uses_merge_base_when_base_advanced(self) -> None:
+        head = run_git(self.repo, 'rev-parse', 'HEAD').strip()
+        run_git(self.repo, 'checkout', '-qb', 'advanced-base', self.base)
+        (self.repo / 'src/app.py').write_text('keep = 1\nold = 2\nbase_tail = 4\n')
+        run_git(self.repo, 'commit', '-qam', 'advance base')
+        advanced = run_git(self.repo, 'rev-parse', 'HEAD').strip()
+        run_git(self.repo, 'checkout', '-q', '--detach', head)
+        self.base, branch_point = advanced, self.base
+        result, report = self.run_hook(K_HOOK_WITH_FINDINGS.split('\n', 1)[1])
+        self.assertEqual(1, result.returncode)
+        self.assertEqual([2], [item['line'] for item in report['findings']])
+        self.assertEqual(advanced, report['base'])
+        self.assertEqual(branch_point, report['merge_base'])
+
+    def test_duplicate_hook_ids_run_once_with_multiple_summaries(self) -> None:
+        for count in (2, 1):
+            with self.subTest(count=count):
+                (self.root / 'bin' / 'invocations').unlink(missing_ok=True)
+                result, report = self.run_hook(
+                    "marker = Path(__file__).with_name('invocations')\n"
+                    "if sys.argv[2] != '--color=never':\n"
+                    "    if marker.exists():\n"
+                    "        raise RuntimeError('hook ran twice')\n"
+                    "    marker.write_text('ran')\n"
+                    f"for index in range({count}):\n"
+                    "    print(f'Check {index}........................Passed')\n"
+                    "    print('- hook id: check')\n"
+                )
+                self.assertEqual(0, result.returncode, report)
+                self.assertEqual(count, len(report['hooks']))
+
+    def test_signals_still_emit_json_and_remove_worktree(self) -> None:
+        for number in (SIGTERM, SIGINT, None):
+            with self.subTest(signal=number):
+                body = "print('Check........................Passed')\n"
+                if number is not None:
+                    body += f"import os\nos.kill(os.getppid(), {int(number)})\n"
+                result, report = self.run_hook(body)
+                self.assertEqual(2 if number is not None else 0, result.returncode)
+                self.assertEqual('could-not-run' if number is not None else 'clean', report['status'])
+                self.assertTrue(report['worktree_removed'])
+                self.assert_checkout_untouched()
+
+    def test_empty_success_is_not_applicable(self) -> None:
+        for body, status in (("print('No hooks apply')\n", 'not applicable'),
+                             ("print('Check........................Passed')\n", 'clean')):
+            with self.subTest(status=status):
+                result, report = self.run_hook(body)
+                self.assertEqual(0, result.returncode)
+                self.assertEqual(status, report['status'])
+                if status == 'not applicable':
+                    self.assertTrue(report['reason'])
+
+    def test_non_utf8_path_is_reported_without_traceback(self) -> None:
+        for name in ('odd-\udcff.py', 'ordinary.py'):
+            with self.subTest(name=name):
+                path = self.repo / name
+                path.write_text('new\n')
+                run_git(self.repo, 'add', '--', name)
+                run_git(self.repo, 'commit', '-qm', 'add path')
+                result, report = self.run_hook(
+                    "import os\n"
+                    "print('Check........................Failed', flush=True)\n"
+                    "print('- hook id: check', flush=True)\n"
+                    f"os.write(1, os.fsencode({name!r} + ':1: problem\\n'))\n"
+                    "sys.exit(1)\n"
+                )
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertEqual(name, report['findings'][0]['path'])
+
+    def test_unexpected_exception_exits_two_with_cleanup(self) -> None:
+        spec = spec_from_file_location('changed_hooks', K_SCRIPT)
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for error in (ValueError('unexpected'), None):
+            with self.subTest(error=error):
+                argv = [str(K_SCRIPT), '--repo', str(self.repo), self.base]
+                with (
+                    patch.object(sys, 'argv', argv),
+                    patch.object(module, 'inspect_hooks', side_effect=error,
+                                 return_value={'status': 'clean'}),
+                    patch.object(module, 'emit') as emit,
+                ):
+                    code = module.main()
+                report = emit.call_args.args[0]
+                self.assertEqual(2 if error else 0, code)
+                self.assertTrue(report['worktree_removed'])
+
+    def test_successful_cleanup_does_not_prune(self) -> None:
+        spec = spec_from_file_location('changed_hooks', K_SCRIPT)
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for failed in (False, True):
+            with self.subTest(failed=failed):
+                original = module.run_git
+                calls = []
+
+                def git(repo, *args):
+                    calls.append(args[:2])
+                    if failed and args[:2] == ('worktree', 'remove'):
+                        raise module.CouldNotRun('remove failed')
+                    return original(repo, *args)
+
+                argv = [str(K_SCRIPT), '--repo', str(self.repo), self.base]
+                with (
+                    patch.object(sys, 'argv', argv),
+                    patch.object(module, 'run_git', side_effect=git),
+                    patch.object(module, 'inspect_hooks', return_value={'status': 'clean'}),
+                    patch.object(module, 'emit') as emit,
+                ):
+                    code = module.main()
+                report = emit.call_args.args[0]
+                self.assertEqual(2 if failed else 0, code)
+                self.assertEqual(failed, ('worktree', 'prune') in calls)
+                self.assertEqual(failed, report['worktree_prune_ran'])
+
+
+    def test_unexpected_cleanup_error_exits_two(self) -> None:
+        spec = spec_from_file_location('changed_hooks', K_SCRIPT)
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for error in (RuntimeError('unexpected cleanup error'), None):
+            with self.subTest(error=error):
+                original = module.remove_worktree
+
+                def remove(repo, directory, report):
+                    original(repo, directory, report)
+                    if error:
+                        raise error
+
+                argv = [str(K_SCRIPT), '--repo', str(self.repo), self.base]
+                with (
+                    patch.object(sys, 'argv', argv),
+                    patch.object(module, 'remove_worktree', side_effect=remove),
+                    patch.object(module, 'inspect_hooks', return_value={
+                        'status': 'findings', 'findings': [{'line': 2}],
+                    }),
+                    patch.object(module, 'emit') as emit,
+                ):
+                    code = module.main()
+                report = emit.call_args.args[0]
+                self.assertEqual(2 if error else 1, code)
+                self.assertEqual([{'line': 2}], report['findings'])
+                self.assertTrue(report['worktree_removed'])
 
 
 if __name__ == "__main__":
