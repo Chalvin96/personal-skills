@@ -69,6 +69,9 @@ they change the outcome:
   only those.
 - Implementation itself goes to the delegate the user's rules name, not to
   extra subagents of the planning session.
+- A delegate brief states the problem, evidence, constraints, and the
+  placement decision with its reason. It names a file or line only after that
+  decision is recorded.
 - If that delegate is down or out of quota, report it and stop that step,
   or use the next delegate the user named. Never substitute Opus or another
   top-tier subagent. When the user says the delegate is back, restart the
@@ -83,6 +86,7 @@ they change the outcome:
 | PR description or publication | [Ume PR](../ume-pr/SKILL.md) |
 | Unfamiliar flow or placement | pstack `how` when installed; otherwise trace the flow from its real entry points and callers in source |
 | Unexplained constraint | pstack `why` when installed; otherwise read decision records, then the constraint's history in git |
+| Symptom in data another system produces | Decide the owner before choosing a file: the system where the fact is first known publishes it as a field, and the consumer maps published fields. Consumer code that derives meaning from the producer's content (label text, "all segments are X", guessing a missing field) is a stop: propose the producer change instead. Existing inference of that kind is debt, not precedent. |
 | Changed shared contract | pstack `blast-radius` when installed; otherwise list every consumer of the changed name, field, or payload and name the assumption that clears each risk |
 | Cheap regression path or requested TDD | pstack `tdd` when installed; otherwise write the failing check, fix, keep it green |
 | Local gate | `local-ci` when installed; otherwise the repository's documented checks |

@@ -12,6 +12,13 @@ Record these four answers in the review notes:
 4. Does the name describe the promised outcome, or hide another independently
    useful operation?
 
+When the change consumes another system's payload (an importer, adapter, or
+client), also ask: does the consumer branch on the producer's content rather
+than a published field? String literals, regexes, or structural heuristics over
+payload values, especially source-language text the published schema has no
+field for, are a finding: the meaning belongs in the producer's published
+contract.
+
 When durable state is written before later fallible work, require a targeted
 failure test. Force the later work to fail and assert that the surviving state
 is safe or that the documented recovery occurs.
