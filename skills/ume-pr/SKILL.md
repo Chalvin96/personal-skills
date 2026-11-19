@@ -32,6 +32,10 @@ and wait for confirmation before dividing anything.
 
 Follow [the PR body format](references/pr-body.md).
 
+## Proof gate
+
+Apply the [proof gate](../ume-implement/references/proof-gate.md) before publication or merge.
+
 ## Publish
 
 Follow [publishing](references/publishing.md): create new PRs as drafts; pin

@@ -109,6 +109,10 @@ dependencies, starting services, and preparing data need the human's
 go-ahead. A missing check is a reported gap, not a silently skipped one;
 reuse evidence the user supplies when it matches the current diff.
 
+## Proof gate
+
+Apply the [proof gate](references/proof-gate.md) before the final report.
+
 ## Final report
 
 - changed behaviour and changed files;

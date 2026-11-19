@@ -25,8 +25,8 @@ the evidence actually observed for it.>
 
 ## Labels
 
-- **Proven**: observed on this change; name the exact command or scenario that
-  produced the recorded result.
+- **Proven**: observed at the final head revision; name that revision and the
+  exact command or scenario that produced the recorded result.
 - **Failed**: attempted, and the observed result contradicts the claim; report
   the observed result.
 - **Pending**: not yet observed. Name the scenario, the expected result, and
@@ -44,8 +44,7 @@ Local evidence is first-class because CI may not run. Results from the
 repository's gate (`local-ci` when installed, otherwise the repository's
 documented checks) are valid proof when they ran against this exact head.
 Name the base revision for any before/after comparison, and keep the
-conditions comparable. UI changes link the `visual-proof` triptych for the
-changed stories. Link reviewer-accessible artifacts only; label local-only
+conditions comparable. For UI changes, link the captures, comparison, review, and coverage record required by the [proof gate](../../ume-implement/references/proof-gate.md). Link reviewer-accessible artifacts only; label local-only
 paths as local-only and never invent a URL.
 
 In a stack, a layer's Proof covers only what that layer itself introduces or
