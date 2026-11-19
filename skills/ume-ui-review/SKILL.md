@@ -35,7 +35,9 @@ caption, helper line, count, number, and control:
 A reason to keep it must help someone identify something, find it, decide the
 next step, orient themselves, avoid or recover from an error, or operate with
 assistive technology. If nothing becomes harder and the element only makes
-the screen look thorough, propose removing it. Apply the removal test to replacement explanations too. For a panel, account for its headline, chart, breakdown, legend, and metadata together; name what stays or disappears and the task consequence.
+the screen look thorough, propose removing it. Apply the removal test to
+replacement explanations too. For a group of related elements, assess its
+contents together; name what stays or disappears and the task consequence.
 
 Keep accessible names and semantic headings. Removing visible text may require
 an accessible equivalent. Keep labels on unfamiliar controls, field labels,
@@ -50,20 +52,23 @@ Apply the removal test and all five questions to every supplied capture. Before 
 
 1. **Truthfulness.** Does each claim match what the data actually proves?
    Counts must name unit and scope; distinguish occurrences from distinct
-   items. Label estimates. Describe recorded activity as saved or completed; claim reading, comprehension, or learning only with evidence for it. Do not present a metric driven mostly by account age as feedback
-   on the current task. If the definition is unavailable, flag the ungrounded
+   items. Label estimates. Describe stored status and recorded activity only
+   as what they measure;
+   claim comprehension or outcomes only with evidence for them. Do not present
+   a metric driven mostly by account or history age as feedback on the current
+   task. If the definition is unavailable, flag the ungrounded
    claim and ask for it rather than asserting how it was calculated.
 2. **Task and action.** Can this audience identify the task and one primary
-   next action? Completion states lead with what was completed and one next
-   action. Keep one name per concept across this
-   screen and related screens. Empty-state copy must name the empty collection
-   and remain true beside populated collections.
-3. **Necessity.** For every removal, explain what the retained screen lets the user do. For completion screens, consult [completion states](references/principles.md#completion-states).
+   next action? For completion states, consult
+   [completion states](references/principles.md#completion-states). Keep one
+   name per concept across this screen and related screens. Empty-state copy
+   must name the empty collection and remain true beside populated collections.
+3. **Necessity.** For every removal, explain what the retained screen lets the user do.
 4. **Grouping and emphasis.** Is there one focal point appropriate to the task?
    Keep related things together. Use consistent styling for the same meaning.
-   Underlines or other cues that promise tapping belong only on interactive
-   elements. When interaction is unknown, request a runtime check rather than
-   claim a screenshot proves that a control is inert.
+   Visual cues that signal interactivity belong only on interactive elements.
+   When interaction is unknown, request a runtime check rather than claim a
+   screenshot proves that a control is inert.
 5. **Perception and operation.** Check readable contrast, meaning beyond colour, visible focus when shown, and usable targets. Use the WCAG entry in [principles](references/principles.md) for thresholds, scope, and exceptions. Record which runtime checks remain untested, including keyboard access, focus order, zoom/reflow, and screen-reader behaviour.
 
 ## Cover states and widths
