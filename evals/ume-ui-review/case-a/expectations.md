@@ -6,5 +6,4 @@
   and proposes removing it from the completion screen.
 - A4: Flags underlined non-interactive counts as misleading interaction cues.
 - A5: Flags the absence of a clear primary next action.
-- A6: Proposes a reduced screen with a completion line, looked-up words when
-  available, and one primary action. Does not invent lookup data.
+- A6: proposes a reduced completion screen naming a completion line, the task's result (or states that result data is unavailable rather than inventing it), and one primary next action.
