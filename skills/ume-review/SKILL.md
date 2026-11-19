@@ -314,6 +314,15 @@ memoization call, validation branch, serializer field, route, or configuration
 value has a status of finding, question, or no finding with bounded search
 evidence.
 
+## UI review pass
+
+When the diff changes UI components, styles, or copy rendered to users, run
+[ume-ui-review](../ume-ui-review/SKILL.md) as a separate pass on the change's
+screenshots from [visual-proof](../visual-proof/SKILL.md) or other UI proof.
+Record the captures, states, widths, findings, and limits in the review ledger.
+If no screenshots exist, record `ui-review: not run — no captures` as a gap,
+never a pass. Include the pass's findings and uncovered states in the output.
+
 ## Output
 
 Read [the finding format](references/comment-format.md). Open with findings. Do

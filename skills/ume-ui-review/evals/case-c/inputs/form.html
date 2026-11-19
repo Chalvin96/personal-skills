@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export pages</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 20px; font: 18px/1.5 system-ui, sans-serif; color: #17212b; background: #f2f4f6; }
+  main { max-width: 480px; margin: auto; padding: 24px; background: white; }
+  h1 { margin: 0 0 16px; font-size: 28px; }
+  label { display: block; margin-top: 20px; font-weight: 600; }
+  input, select, button { width: 100%; min-height: 48px; padding: 10px; font: inherit; }
+  input, select { border: 2px solid #52606d; border-radius: 4px; background: white; color: #17212b; }
+  input[aria-invalid] { border-color: #a51d28; }
+  p { margin: 8px 0 16px; }
+  #range-error { color: #a51d28; }
+  button { margin-top: 20px; border: 0; border-radius: 4px; background: #174a83; color: white; font-weight: 600; }
+  :focus-visible { outline: 3px solid #17212b; outline-offset: 3px; }
+</style>
+<main>
+  <h1>Export pages</h1>
+  <form>
+    <label for="format">File format</label>
+    <select id="format"><option>PDF</option><option>Plain text</option></select>
+    <label for="range">Page range</label>
+    <input id="range" value="8-3" aria-invalid="true" aria-describedby="range-error">
+    <p id="range-error">Enter the first page before the last, for example 3-8.</p>
+    <button type="button">Export pages</button>
+  </form>
+</main>
+</html>

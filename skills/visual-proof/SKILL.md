@@ -1,11 +1,17 @@
 ---
 name: visual-proof
-description: "Before | after | pixel-diff triptychs of Storybook stories across widths, with real changes split from anti-aliasing noise on one review page. Use when a change is visible in the UI, a visual baseline moves, or the owner asks for screenshots, a diff, or proof before choosing."
+description: "Before | after | pixel-diff triptychs of running-app scenarios or Storybook stories across widths, with real changes split from anti-aliasing noise on one review page. Use when a change is visible in the UI, a visual baseline moves, or the owner asks for screenshots, a diff, or proof before choosing."
 ---
 
 # Visual proof
 
 `<skill>` below is the directory holding this file.
+
+Choose the capture source before starting. For a running app, follow
+[real-app capture](references/real-app.md). For Storybook, use the steps below.
+Both paths reuse this skill's diff and review page; neither a pixel diff nor
+an unchanged image establishes UI quality. Pair captures with the observed
+action and outcome, then run [ume-ui-review](../ume-ui-review/SKILL.md).
 
 1. Once per machine, install the capture browser: `pnpm install --dir <skill>`.
 2. From the target repository, capture, diff, and serve the review page. For
