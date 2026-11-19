@@ -41,4 +41,4 @@ additional review passes or override project decisions.
 
 ## Completion states
 
-Name what finished, the task-relevant result when available, and one primary next action. Identify each in the proposal. For a reading task, looked-up words may be a relevant result. Propose displaying them only when backed by data; mark missing result data as unavailable.
+Name what finished, the task-relevant result when available, and one primary next action. Identify each in the proposal. For a reading task, explicitly propose displaying looked-up words when backed by data, or state that lookup data is unavailable.
