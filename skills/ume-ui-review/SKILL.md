@@ -1,6 +1,6 @@
 ---
 name: ume-ui-review
-description: Judge screenshots for clear tasks, truthful claims, minimal content, grouping, and accessibility. Use on screenshots alone or as the separate UI pass for components, styles, or user-facing copy changed in a diff.
+description: UI review. Use for supplied screenshots or the separate UI pass on components, styles, or user-facing copy changed in a diff.
 ---
 
 # Ume UI review
@@ -35,11 +35,7 @@ caption, helper line, count, number, and control:
 A reason to keep it must help someone identify something, find it, decide the
 next step, orient themselves, avoid or recover from an error, or operate with
 assistive technology. If nothing becomes harder and the element only makes
-the screen look thorough, report it and propose the simpler screen. Do not
-replace removed clutter with a new explanation of the same clutter. A misleading
-headline does not finish the removal test: examine its chart, supporting
-breakdown, legend, and metadata too. Name which of those stay or disappear
-and the task consequence, even when removing the whole panel.
+the screen look thorough, propose removing it. Apply the removal test to replacement explanations too. For a panel, account for its headline, chart, breakdown, legend, and metadata together; name what stays or disappears and the task consequence.
 
 Keep accessible names and semantic headings. Removing visible text may require
 an accessible equivalent. Keep labels on unfamiliar controls, field labels,
@@ -50,41 +46,25 @@ a question. A taste-only choice remains `suggestion`.
 
 ## Answer five questions
 
-Use these as the spine of one review. The supporting
-[principles](references/principles.md) explain judgments, not extra passes.
+Apply the removal test and all five questions to every supplied capture. Before reporting, record an outcome for each: finding, no finding, or not checked with a reason. Consult [principles](references/principles.md) when explaining a judgment.
 
 1. **Truthfulness.** Does each claim match what the data actually proves?
    Counts must name unit and scope; distinguish occurrences from distinct
-   items. Label estimates. A stored status does not prove comprehension or
-   learning. Do not present a metric driven mostly by account age as feedback
+   items. Label estimates. Describe recorded activity as saved or completed; claim reading, comprehension, or learning only with evidence for it. Do not present a metric driven mostly by account age as feedback
    on the current task. If the definition is unavailable, flag the ungrounded
    claim and ask for it rather than asserting how it was calculated.
 2. **Task and action.** Can this audience identify the task and one primary
    next action? Completion states lead with what was completed and one next
-   action. Recording that someone finished or saved something does not prove
-   they read, understood, or learned it. Keep one name per concept across this
+   action. Keep one name per concept across this
    screen and related screens. Empty-state copy must name the empty collection
    and remain true beside populated collections.
-3. **Necessity.** Carry forward the removal test. For each proposed removal,
-   explain what the retained content lets the user do. A completion screen
-   often needs only a completion line, task-relevant items such as looked-up
-   words, and one primary action. In a completion-screen proposal, name the
-   completion line, the task-relevant result, and the primary action explicitly.
-   If result data such as looked-up words is absent, say it is unavailable and
-   propose showing it only when backed by that data. Never invent items or counts.
+3. **Necessity.** For every removal, explain what the retained screen lets the user do. For completion screens, consult [completion states](references/principles.md#completion-states).
 4. **Grouping and emphasis.** Is there one focal point appropriate to the task?
    Keep related things together. Use consistent styling for the same meaning.
    Underlines or other cues that promise tapping belong only on interactive
    elements. When interaction is unknown, request a runtime check rather than
    claim a screenshot proves that a control is inert.
-5. **Perception and operation.** Check readable contrast, meaning beyond colour,
-   visible focus when shown, and usable targets. WCAG 2.2 AA requires 4.5:1
-   for normal text, 3:1 for large text and applicable UI boundaries or states.
-   Pointer targets under 2.5.8 need at least 24 by 24 CSS pixels or a qualifying
-   spacing, equivalent-control, inline, user-agent, or essential exception.
-   The 44 by 44 CSS pixel threshold is AAA 2.5.5, not AA. Use the linked WCAG
-   criteria for scope and exceptions. Screenshots cannot prove keyboard access,
-   focus order, zoom/reflow, or screen-reader behaviour. Say what was not checked.
+5. **Perception and operation.** Check readable contrast, meaning beyond colour, visible focus when shown, and usable targets. Use the WCAG entry in [principles](references/principles.md) for thresholds, scope, and exceptions. Record which runtime checks remain untested, including keyboard access, focus order, zoom/reflow, and screen-reader behaviour.
 
 ## Cover states and widths
 
@@ -97,25 +77,10 @@ captures through visual-proof when they are needed to complete UI proof.
 
 ## Report
 
-Open with findings, or `No findings.` Use the shared
-[finding format](../ume-review/references/comment-format.md):
+Open with findings, or `No findings.` Follow the shared [finding format](../ume-review/references/comment-format.md), using `ui-review / <rule>` as the origin. Locate screenshot findings by capture ID and region; add file and line when known.
 
-```markdown
-**warning** · ui-review / truthfulness · capture-id.png, mastery panel → the headline does not describe this task
+Each assessment names the audience, state, evidence, and consequence. Distinguish visible evidence, supplied facts, and unresolved questions. Each fix proposes a concrete simplification and explains what the retained screen supports.
 
-Name the element, audience, state, observed evidence, and consequence.
-Distinguish visible evidence from supplied facts and unresolved questions.
-
----
-
-Propose a concrete simplification and explain what the retained screen supports.
-```
-
-Use `critical`, `warning`, or `suggestion` as defined in that format. Origin is
-`ui-review` plus the rule, such as removal test, truthfulness, task and action,
-grouping, or perception and operation. A screenshot region is a valid location
-without a diff; add file and line only when known. Every finding names the
-element, screenshot, audience, consequence, and proposed simplification.
 Deduplicate findings with the parent review. Keep uncertain intent as a question.
 
 End with states and widths reviewed/not reviewed, exclusions with reasons,

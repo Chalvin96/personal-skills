@@ -33,9 +33,7 @@ Use synthetic or approved local test data. Never seed production data.
    explicit readiness and the expected result, not an arbitrary delay.
 3. Execute the scenario on base, observe each action's outcome, and capture
    the relevant region. Repeat on head. Record failed expectations as failures.
-   Use one capture set per applicable state and width: empty, first-use/new
-   account, sparse, typical, crowded/long text, loading, and error. Exclude
-   states only with a reason; unavailable states remain proof gaps.
+   Use one capture set per state and width required by [UI review coverage](../../ume-ui-review/SKILL.md#cover-states-and-widths). Record justified exclusions; unavailable captures remain proof gaps.
 4. Store matching PNG filenames under `before/` and `after/`, for example
    `library-sparse@390.png`. Keep an evidence manifest beside them with the
    scenario, revisions, environment, observed outcomes, and capture paths.

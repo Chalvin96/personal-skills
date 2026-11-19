@@ -38,3 +38,7 @@ additional review passes or override project decisions.
   [W3C writing guidance](https://www.w3.org/WAI/tips/writing/).
   Use the separately installed `simplified-technical-english` skill for prose
   when available; this skill does not own a writing workflow.
+
+## Completion states
+
+Name what finished, the task-relevant result when available, and one primary next action. Identify each in the proposal. For a reading task, looked-up words may be a relevant result. Propose displaying them only when backed by data; mark missing result data as unavailable.

@@ -1,6 +1,6 @@
 ---
 name: visual-proof
-description: "Before | after | pixel-diff triptychs of running-app scenarios or Storybook stories across widths, with real changes split from anti-aliasing noise on one review page. Use when a change is visible in the UI, a visual baseline moves, or the owner asks for screenshots, a diff, or proof before choosing."
+description: Visual proof. Use for UI changes, baseline updates, or requested screenshots and comparisons.
 ---
 
 # Visual proof

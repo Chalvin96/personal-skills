@@ -44,10 +44,7 @@ Local evidence is first-class because CI may not run. Results from the
 repository's gate (`local-ci` when installed, otherwise the repository's
 documented checks) are valid proof when they ran against this exact head.
 Name the base revision for any before/after comparison, and keep the
-conditions comparable. UI changes link real-app or Storybook `visual-proof`
-captures and inspected triptychs for applicable states and widths, with the
-`ume-ui-review` result and the observed actions and outcomes. Record exclusions
-and missing captures. Link reviewer-accessible artifacts only; label local-only
+conditions comparable. For UI changes, link the captures, comparison, review, and coverage record required by the [proof gate](../../ume-implement/references/proof-gate.md). Link reviewer-accessible artifacts only; label local-only
 paths as local-only and never invent a URL.
 
 In a stack, a layer's Proof covers only what that layer itself introduces or

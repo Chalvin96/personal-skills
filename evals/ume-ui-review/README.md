@@ -6,8 +6,7 @@ supplied library capture to the reading content, excluding account navigation
 and the recorder overlay. Case C is original static HTML and a Playwright PNG.
 The fixtures contain no personal names, emails, tokens, or account pages.
 
-For each case, start a fresh agent with only SKILL.md, its linked references,
-that case's task.md, and inputs. Do not expose expectations.md to the runner.
+For each case, start a fresh agent with `skills/ume-ui-review/SKILL.md`, references it requests, that case’s task and inputs. Keep the expectations file available only to the evaluator.
 Attach the PNG or use the runner's image-viewing tool. Keep raw prompts,
 transcripts, and outputs outside git and identify the tested revision/tree.
 Read each output and mark every expectation met or missed. Improve the skill
