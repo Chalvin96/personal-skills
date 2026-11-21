@@ -89,6 +89,33 @@ the risk is at that boundary:
 Do not test framework behavior or private structure when a public behavior test can
 prove the same contract.
 
+## Low-value and flaky patterns
+
+These patterns cost run time and maintenance without protecting a behaviour.
+Each was found in bulk in a real suite and removed without losing coverage of
+anything a user or API client can observe. Flag them in changed tests; when
+writing tests, do not produce them.
+
+| Pattern | Examples | Instead |
+| --- | --- | --- |
+| Asserts internals | class names or markup structure, `data-state` with no matching ARIA state, exact SQL text, query counts, `EXPLAIN` plans, log lines, ORM loading strategy, export inventories | Assert the response, persisted data, visible text, role, or accessible state |
+| Mocks first-party code | spying on the project's own API client, cache keys, or child components; asserting call order between project modules | Mock only an external boundary: third-party HTTP, the clock, a model provider |
+| Measures the machine | real sleeps, wall-clock or p95 budgets, polling with real timers, bounding-box arithmetic | Fake timers, an observable condition, viewport or visibility assertions; keep performance budgets in an opt-in suite |
+| Improbable scenario | a child mock firing a handler in a state the UI cannot reach; input already rejected at the API boundary | Test the boundary that rejects it, once |
+| Padding | the same behaviour repeated with 1 vs 3 attempts, constant or default-value checks, parametrised cases that take the same branch | One test per behaviour; parametrise only across branches |
+| Repeated expensive setup | rebuilding a large corpus or reseeding a database for every parametrised case | Build once per module and isolate each case with a savepoint or transaction |
+
+A test that has failed and then passed on the same commit is flaky until its
+cause is known. Fix the cause (wait for the right condition, isolate the data)
+or delete the test; do not add retries to hide it. Before deleting an
+end-to-end test of a main journey or a security property, confirm with the
+owner: it may be the only coverage of that journey.
+
+`UME-TEST001` to `UME-TEST003` and `UME-DS004` decide the syntactic forms of
+these patterns; the rest stay judgement. Bounding-box arithmetic is judgement:
+it is flaky when sampled during scrolling or layout changes, and it is the
+behaviour when the test checks that an element is placed beside another.
+
 ## Stronger evidence
 
 Coverage shows which code ran. It does not show that the assertions can detect a

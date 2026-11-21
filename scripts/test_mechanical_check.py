@@ -397,5 +397,85 @@ class ConstantScopeTest(unittest.TestCase):
         self.assertIn("UME-PY006", result.stdout)
 
 
+class TestPatternRuleTest(unittest.TestCase):
+    """Test patterns that measure the machine or the implementation."""
+
+    def run_checker(self, source: str, filename: str) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / filename
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(source, encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(K_CHECKER), "--root", str(root), filename],
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+
+    def assert_rule(self, rule: str, source: str, filename: str) -> None:
+        result = self.run_checker(source, filename=filename)
+        self.assertEqual(1, result.returncode, result.stdout)
+        self.assertIn(rule, result.stdout)
+
+    def assert_silent(self, rule: str, source: str, filename: str) -> None:
+        result = self.run_checker(source, filename=filename)
+        self.assertNotIn(rule, result.stdout)
+
+    def test_real_sleep_given_python_test_expect_test001(self):
+        self.assert_rule("UME-TEST001", "import time\n\ntime.sleep(0.5)\n", "tests/test_poll.py")
+
+    def test_real_sleep_given_zero_yield_or_production_expect_silent(self):
+        self.assert_silent("UME-TEST001", "import asyncio\n\nasyncio.sleep(0)\n", "tests/test_poll.py")
+        self.assert_silent("UME-TEST001", "import time\n\ntime.sleep(1)\n", "app/worker.py")
+
+    def test_real_sleep_given_playwright_or_promise_timeout_expect_test001(self):
+        for source in (
+            "await page.waitForTimeout(500);\n",
+            "await new Promise((resolve) => setTimeout(resolve, 5000));\n",
+        ):
+            with self.subTest(source=source):
+                self.assert_rule("UME-TEST001", source, "frontend/e2e/flow.spec.ts")
+
+    def test_real_sleep_given_fake_timers_expect_silent(self):
+        self.assert_silent("UME-TEST001", "vi.advanceTimersByTime(5000);\n", "frontend/src/poll.test.ts")
+        self.assert_silent(
+            "UME-TEST001", "await new Promise((r) => setTimeout(r, 0));\n", "frontend/src/flush.test.ts"
+        )
+
+    def test_clock_measure_given_test_expect_test002(self):
+        self.assert_rule(
+            "UME-TEST002", "import time\n\nstart = time.perf_counter()\n", "tests/test_budget.py"
+        )
+        self.assert_rule("UME-TEST002", "const start = performance.now();\n", "src/budget.test.ts")
+
+    def test_clock_measure_given_production_or_monotonic_deadline_expect_silent(self):
+        self.assert_silent("UME-TEST002", "import time\n\nstart = time.perf_counter()\n", "app/metrics.py")
+        self.assert_silent(
+            "UME-TEST002", "import time\n\ndeadline = time.monotonic() + 5\n", "tests/test_wait.py"
+        )
+
+    def test_sql_plan_given_test_expect_test003(self):
+        for source in (
+            'rows = conn.execute(text("EXPLAIN SELECT 1"))\n',
+            'event.listen(engine, "before_cursor_execute", count)\n',
+        ):
+            with self.subTest(source=source):
+                self.assert_rule("UME-TEST003", source, "tests/integration/test_plan.py")
+
+    def test_sql_plan_given_prose_or_production_expect_silent(self):
+        self.assert_silent("UME-TEST003", 'note = "explains the result"\n', "tests/test_doc.py")
+        self.assert_silent("UME-TEST003", 'message = "Explain this."\n', "tests/test_chat.py")
+        self.assert_silent("UME-TEST003", 'task = "EXPLAIN what went wrong"\n', "tests/test_chat.py")
+        self.assert_silent("UME-TEST003", 'sql = "EXPLAIN SELECT 1"\n', "app/diagnostics.py")
+
+    def test_test_rule_given_matching_suppression_expect_no_finding(self):
+        self.assert_silent(
+            "UME-TEST001",
+            "import time\n\ntime.sleep(1)  # ume-ignore: UME-TEST001\n",
+            "tests/test_poll.py",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
