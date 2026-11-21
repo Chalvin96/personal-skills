@@ -58,6 +58,9 @@ concrete fix.
 | `UME-DS006` | An arbitrary `var(--token)` class whose token has an equivalent named utility, a background class that reads a role with a different named utility, or a token absent from repository CSS. Discovers `@theme` namespaces and direct `@utility` wrappers. |
 | `UME-DS007` | A raw colour or non-scale length in a CSS declaration outside token definitions. Includes component-local custom properties. Exempts the layout and scale values below. |
 | `UME-DS008` | A discovered palette variable or palette utility read outside the theme layer. Falls back to numbered `--primary-*`, `--secondary-*`, `--accent-*`, `--warning-*`, `--destructive-*`, `--black-*`, and `--white-*` steps. Components read semantic roles. |
+| `UME-TEST001` | A real sleep in a test: `time.sleep`/`asyncio.sleep` with a non-zero delay in a Python test path, or `waitForTimeout(` / `new Promise(... => setTimeout(` in a test, spec, or story. Zero-delay yields (`asyncio.sleep(0)`, `setTimeout(r, 0)`) and fake-timer calls pass. |
+| `UME-TEST002` | A wall-clock measurement in a test: `time.perf_counter`/`perf_counter_ns` in a Python test path, or `performance.now()` in a test, spec, or story. `time.monotonic` deadlines pass. |
+| `UME-TEST003` | A query plan or SQL capture in a Python test path: a string starting with `EXPLAIN` followed by `SELECT`, `ANALYZE`, `VERBOSE`, `(`, `INSERT`, `UPDATE`, `DELETE`, or `WITH`; or a `before_cursor_execute`/`after_cursor_execute` listener. |
 | `UME-TOOL001` | Python syntax that cannot be parsed. |
 
 The checker is intentionally conservative. It does not claim to prove

@@ -55,6 +55,15 @@ K_NOQA = re.compile(
 K_TEST_SOURCE = re.compile(r"\.(?:test|spec|stories)\.[cm]?[jt]sx?$")
 K_CLASS_ASSERTION = re.compile(r"\.(?:toHaveClass|className|classList)\b")
 K_CLASS_ASSERTION_EXEMPT_DIRS = ("packages/ui/",)
+K_SLEEP_CALLS = {"time.sleep", "asyncio.sleep"}
+K_CLOCK_MEASURE_CALLS = {"time.perf_counter", "time.perf_counter_ns"}
+K_SQL_PLAN = re.compile(r"^\s*EXPLAIN\s+(?:ANALYZE\b|VERBOSE\b|\(|SELECT\b|INSERT\b|UPDATE\b|DELETE\b|WITH\b)")
+K_SQL_CAPTURE_EVENTS = {"before_cursor_execute", "after_cursor_execute"}
+K_JS_SLEEP = re.compile(
+    r"\.waitForTimeout\s*\(|new\s+Promise\s*\(\s*\(?\s*[A-Za-z_$][\w$]*\s*\)?\s*=>\s*setTimeout\s*\("
+)
+K_JS_ZERO_TIMEOUT = re.compile(r"setTimeout\s*\(\s*[A-Za-z_$][\w$]*\s*,\s*0\s*\)")
+K_JS_CLOCK_MEASURE = re.compile(r"\bperformance\.now\s*\(")
 
 
 @dataclass(frozen=True)
@@ -273,6 +282,9 @@ def _check_python(
         return
 
     imported_names, legacy_names, legacy_qualified = _collect_python_imports(tree)
+
+    if _is_python_test_path(path):
+        _check_python_test_patterns(checker, path, tree, lines)
 
     if django_evidence:
         for node in ast.walk(tree):
@@ -596,6 +608,51 @@ def _check_python(
             )
 
 
+def _is_python_test_path(path: str) -> bool:
+    parts = Path(path).parts
+    name = parts[-1] if parts else ""
+    return name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py" or "tests" in parts
+
+
+def _is_zero_constant(node: ast.Call) -> bool:
+    return bool(node.args) and isinstance(node.args[0], ast.Constant) and node.args[0].value == 0
+
+
+def _check_python_test_patterns(checker: Checker, path: str, tree: ast.AST, lines: list[str]) -> None:
+    """Flag test patterns that measure the machine or the implementation."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            qualified = _build_qualified_name(node.func)
+            if qualified in K_SLEEP_CALLS and not _is_zero_constant(node):
+                checker.emit(
+                    path,
+                    node.lineno,
+                    "UME-TEST001",
+                    "a real sleep makes the test slow and timing-dependent; wait for an "
+                    "observable condition or control the clock",
+                    lines,
+                )
+            elif qualified in K_CLOCK_MEASURE_CALLS:
+                checker.emit(
+                    path,
+                    node.lineno,
+                    "UME-TEST002",
+                    "a wall-clock measurement in a test asserts the host's speed, not the "
+                    "behaviour; keep performance budgets out of the default suite",
+                    lines,
+                )
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if K_SQL_PLAN.match(node.value) or node.value in K_SQL_CAPTURE_EVENTS:
+                checker.emit(
+                    path,
+                    node.lineno,
+                    "UME-TEST003",
+                    "a query plan or captured SQL pins the implementation; assert the "
+                    "returned or persisted result",
+                    lines,
+                )
+
+
 def _blank_js_strings(line: str) -> str:
     """Blank string and template contents so prose cannot read as a declaration.
 
@@ -688,6 +745,7 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
     )
     react_evidence = react_dependency or react_file_evidence
     class_assertion_scope = _is_class_assertion_scope(path)
+    test_source = bool(K_TEST_SOURCE.search(path))
     for number, line in enumerate(lines, 1):
         if re.search(r"(?::\s*any\b|\bas\s+any\b|<\s*any\s*>|\bArray\s*<\s*any\s*>)", line):
             checker.emit(
@@ -744,6 +802,24 @@ def _check_javascript(checker: Checker, path: str, text: str, react_dependency: 
 
         code = _blank_js_strings(line)
 
+        if test_source and K_JS_SLEEP.search(code) and not K_JS_ZERO_TIMEOUT.search(code):
+            checker.emit(
+                path,
+                number,
+                "UME-TEST001",
+                "a real sleep makes the test slow and timing-dependent; wait for an "
+                "observable condition or use fake timers",
+                original_lines,
+            )
+        if test_source and K_JS_CLOCK_MEASURE.search(code):
+            checker.emit(
+                path,
+                number,
+                "UME-TEST002",
+                "a wall-clock measurement in a test asserts the host's speed, not the "
+                "behaviour; keep performance budgets out of the default suite",
+                original_lines,
+            )
         if class_assertion_scope and K_CLASS_ASSERTION.search(code):
             checker.emit(
                 path,
