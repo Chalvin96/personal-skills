@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Triage issues and external PRs: categorise, verify, route planning by readiness, write agent briefs, and pick the next issue.
+description: "Triage issues and external PRs: categorise, verify, route planning by readiness, write agent briefs, and pick the next issue."
 disable-model-invocation: true
 ---
 
