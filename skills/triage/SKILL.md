@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Move issues and external PRs through a state machine of triage roles, categorise, verify, grill if needed, and write agent-ready briefs.
+description: Triage issues and external PRs: categorise, verify, route planning by readiness, write agent briefs, and pick the next issue.
 disable-model-invocation: true
 ---
 
@@ -28,6 +28,8 @@ Two **category** roles:
 - `bug`: something is broken
 - `enhancement`: new feature or improvement
 
+Three **priority** roles: `priority-high`, `priority-medium`, `priority-low`.
+
 Five **state** roles:
 
 - `needs-triage`: maintainer needs to evaluate
@@ -38,7 +40,7 @@ Five **state** roles:
 
 For a PR, the same states read against the attached code: `ready-for-agent` means a brief is attached and an agent should take the next step on the diff; `ready-for-human` means it's ready for a human to merge.
 
-Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
+Every triaged issue should carry exactly one category role and one state role; apply exactly one priority role when an issue moves to `ready-for-agent` or `ready-for-human`. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
 These are canonical role names. The actual label strings used in the issue tracker may differ. The mapping should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
@@ -52,6 +54,7 @@ The maintainer invokes `/triage` and describes what they want in natural languag
 - "Let's look at #42" (issue or PR)
 - "Move #42 to ready-for-agent"
 - "What's ready for agents to pick up?"
+- "What should I build next?"
 
 ## Show what needs attention
 
@@ -69,11 +72,19 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 1. **Gather context.** Read the full issue or PR (body, comments, labels, author, dates; for a PR, the diff too). Parse any prior triage notes so you don't re-ask resolved questions. Explore the codebase using the project's domain glossary, respecting ADRs in the area. Run two checks against the codebase: (a) **redundancy**: search for an existing implementation of the requested behavior by domain concept (not just the request's wording), and report where you looked. If found, it's an already-implemented `wontfix` (step 5). (b) **prior rejection**: read `.out-of-scope/*.md` and surface any that resembles this request.
 
-2. **Recommend.** Tell the maintainer your category and state recommendation with reasoning, plus a brief codebase summary relevant to the request (including whether it's already implemented). Wait for direction.
+2. **Recommend.** Tell the maintainer your category, priority, and state recommendation with reasoning, plus a brief codebase summary relevant to the request (including whether it's already implemented). Wait for direction.
 
 3. **Verify the claim.** Before any grilling, check that the claim holds up. For a bug, reproduce it from the reporter's steps. For a PR, confirm the diff does what it claims: check it out, run the relevant tests or commands. Report what happened: confirmed (with code path), failed, or insufficient detail (a strong `needs-info` signal). A confirmed verification makes a much stronger agent brief.
 
-4. **Grill (if needed).** If clarification is needed, use the available `grilling` skill, ask one round at a time, and record resolved terms and decisions in the configured `CONTEXT.md` or ADRs.
+4. **Check readiness and route planning.** Planning gathers enough data to build, so its depth follows the gaps. Fill each field of the [agent brief template](AGENT-BRIEF.md#template) from the issue, its comments, and the codebase, then take the first row that matches:
+
+   | Issue | Route |
+   | --- | --- |
+   | `bug` | Readiness is the verified repro from step 3. Write the brief; implementation follows the bug-fix playbook in `ume-implement`. |
+   | `enhancement` that is **OpenSpec-sized**: several entry points, a new kind of persisted record, an architectural change, or unknowns that need investigation | Hand off to `wayfinder` when unknowns need investigation, otherwise to `grill-me`. Leave the issue `needs-triage`; when the OpenSpec change is apply-ready, fill **Spec** and move the issue to `ready-for-agent`. |
+   | `enhancement`, empty fields other than **Design** that only a human can answer | Run `grilling` on exactly the empty fields, one round at a time; record resolved terms in the configured `CONTEXT.md` or ADRs, then re-check this table. |
+   | `enhancement` that adds or rearranges UI, empty **Design**, repository listed in `ume-design`'s table | Design the board through `ume-design`, link it in **Design**, then re-check this table. |
+   | `enhancement`, every field filled | Write the brief. It is the spec. A one-line issue qualifies when its fields are obvious from the codebase. |
 
 5. **Apply the outcome:**
    - `ready-for-agent`: post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
@@ -85,9 +96,13 @@ Show counts and a one-line summary per item. Let the maintainer pick.
      - **Rejected (enhancement)**: write to `.out-of-scope/`, link to it from a comment, then close ([OUT-OF-SCOPE.md](OUT-OF-SCOPE.md)).
    - `needs-triage`: apply the role. Optional comment if there's partial progress.
 
+## Pick the next issue
+
+For "what next?", list `ready-for-agent` issues, ordered by priority role (high first), then by creation date, oldest first. Show the top three with their briefs' summaries and recommend the first. On the maintainer's pick, assign the issue and hand it to `ume-implement`, or to `openspec-apply-change` when the brief links an OpenSpec change.
+
 ## Quick state override
 
-If the maintainer says "move #42 to ready-for-agent", trust their direction and skip grilling. For `ready-for-agent`, confirm that an existing brief has independently verifiable acceptance criteria, or draft one for maintainer approval. Confirm what you're about to do (role changes, comment, close), then apply the role.
+If the maintainer says "move #42 to ready-for-agent", trust their direction and skip grilling. For `ready-for-agent`, confirm that an existing brief has independently verifiable acceptance criteria and a priority role, or draft one for maintainer approval. Confirm what you're about to do (role changes, comment, close), then apply the role.
 
 ## Needs-info template
 

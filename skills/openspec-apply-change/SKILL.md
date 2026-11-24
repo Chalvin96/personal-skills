@@ -75,16 +75,24 @@ If the work is in a registered OpenSpec store, read [store selection](../openspe
 
 6. **Implement tasks (loop until done or blocked)**
 
-   For each pending task:
+   Work the whole change on one branch and worktree, per `ume-implement`'s
+   Start rules. Each pending task (for `wayfinder-driven`, the selected cycle) is
+   one unit of the build loop:
    - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: `- [ ]` → `- [x]`
+   - **Delegate** the task to the delegate `ume-implement` names, with its scope,
+     success criteria, and the proof scenario from the specs
+   - **Review** the returned diff; send needed changes back to the delegate
+   - **Verify** the task's scenario on the surface its spec names, comparing
+     UI against the linked Penpot board when there is one. A failed,
+     inconclusive, or wrong-surface run goes back to the delegate
+   - **Commit** the unit, then mark the task complete in the tasks file:
+     `- [ ]` → `- [x]`
    - Continue to next task
 
    **Pause if:**
    - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
+   - Implementation reveals a design issue → return to `grill-me` to update
+     the artifacts
    - Error or blocker encountered → report and wait for guidance
    - User interrupts
 
@@ -102,11 +110,11 @@ If the work is in a registered OpenSpec store, read [store selection](../openspe
 ## Implementing: <change-name> (schema: <schema-name>)
 
 Working on task 3/7: <task description>
-[...implementation happening...]
+delegate → review → verify (<scenario>, <surface>) → commit <sha>
 ✓ Task complete
 
 Working on task 4/7: <task description>
-[...implementation happening...]
+delegate → review → verify (<scenario>, <surface>) → commit <sha>
 ✓ Task complete
 ```
 
@@ -151,12 +159,11 @@ What would you like to do?
 - Keep going through tasks until done or blocked
 - Always read context files before starting (from the apply instructions output)
 - If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
+- Update a task checkbox only after its unit is committed
 - For `wayfinder-driven`, update only the cycle checkbox in `tasks.md`, after
   every acceptance gate in the cycle packet passes.
-- If implementation reveals a new design decision, stop, create or reopen a
+- For `wayfinder-driven`, if implementation reveals a new design decision, stop, create or reopen a
   local ticket, integrate it into the TRD, and revalidate.
 - For `wayfinder-driven`, stop after that one cycle. The generic keep-going
   loop below applies only to schemas whose tracked tasks are individual tasks.
@@ -168,4 +175,4 @@ What would you like to do?
 This skill supports the "actions on a change" model:
 
 - **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+- **Allows artifact updates**: If implementation reveals design issues, return to `grill-me` - not phase-locked, work fluidly

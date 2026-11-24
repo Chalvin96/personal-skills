@@ -30,7 +30,8 @@ and wait for confirmation before dividing anything.
 
 ## Write the body
 
-Follow [the PR body format](references/pr-body.md).
+Follow [the PR body format](references/pr-body.md). When the work came from an
+issue, end the body with `Closes #<issue>` so the merge closes it.
 
 ## Proof gate
 

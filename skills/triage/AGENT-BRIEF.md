@@ -42,7 +42,9 @@ State what is out of scope. This prevents the agent from gold-plating or making 
 ## Agent Brief
 
 **Category:** bug / enhancement
+**Priority:** high / medium / low
 **Summary:** one-line description of what needs to happen
+**Goal:** who needs this and why
 
 **Current behavior:**
 Describe what happens now. For bugs, this is the broken behavior.
@@ -57,15 +59,20 @@ Be specific about edge cases and error conditions.
 - `functionName()` return type: what it currently returns vs what it should return
 - Config shape: any new configuration options needed
 
+**Design:** Penpot board link for a change that adds or rearranges UI (via `ume-design`), `existing UI` for copy edits and bug fixes inside current screens, or `no UI`
+**Spec:** OpenSpec change name, when planning produced one
+
 **Acceptance criteria:**
-- [ ] Specific, testable criterion 1
-- [ ] Specific, testable criterion 2
-- [ ] Specific, testable criterion 3
+- [ ] Specific, testable criterion 1, naming the scenario and surface that prove it
+- [ ] Specific, testable criterion 2, naming the scenario and surface that prove it
+- [ ] Specific, testable criterion 3, naming the scenario and surface that prove it
 
 **Out of scope:**
 - Thing that should NOT be changed or addressed in this issue
 - Adjacent feature that might seem related but is separate
 ```
+
+**Spec** is dropped when planning produced no OpenSpec change. **Design** always holds one of its three values. Any other empty field means the issue is not ready; route it per [triage step 4](SKILL.md#triage-a-specific-issue-or-pr).
 
 ## Examples
 
@@ -75,7 +82,9 @@ Be specific about edge cases and error conditions.
 ## Agent Brief
 
 **Category:** bug
+**Priority:** medium
 **Summary:** Skill description truncation drops mid-word, producing broken output
+**Goal:** skill authors see readable descriptions in the skill list
 
 **Current behavior:**
 When a skill description exceeds 1024 characters, it is truncated at exactly
@@ -92,8 +101,10 @@ and append "..." to indicate truncation.
   word boundaries
 - Any function that reads SKILL.md frontmatter and extracts the description
 
+**Design:** no UI
+
 **Acceptance criteria:**
-- [ ] Descriptions under 1024 chars are unchanged
+- [ ] Descriptions under 1024 chars are unchanged (unit test on the frontmatter parser)
 - [ ] Descriptions over 1024 chars are truncated at the last word boundary
       before 1024 chars
 - [ ] Truncated descriptions end with "..."
@@ -110,7 +121,9 @@ and append "..." to indicate truncation.
 ## Agent Brief
 
 **Category:** enhancement
+**Priority:** low
 **Summary:** Add `.out-of-scope/` directory support for tracking rejected feature requests
+**Goal:** the maintainer stops re-litigating rejected requests
 
 **Current behavior:**
 When a feature request is rejected, the issue is closed with a `wontfix` label
@@ -131,8 +144,10 @@ checked for matches.
 - The triage workflow should read all `.out-of-scope/*.md` files early
   and match incoming issues against them by concept similarity
 
+**Design:** no UI
+
 **Acceptance criteria:**
-- [ ] Closing a feature as wontfix creates/updates a file in `.out-of-scope/`
+- [ ] Closing a feature as wontfix creates/updates a file in `.out-of-scope/` (a `/triage` run on a test issue)
 - [ ] The file includes the decision, reasoning, and link to the closed issue
 - [ ] If a matching `.out-of-scope/` file already exists, the new issue is
       appended to its "Prior requests" list rather than creating a duplicate
@@ -153,7 +168,9 @@ For a PR, "Current behavior" describes the state of the diff, and the brief asks
 ## Agent Brief
 
 **Category:** enhancement
+**Priority:** medium
 **Summary:** Finish the contributor's `--json` output flag for `triage list`
+**Goal:** scripts can consume `triage list` output
 
 **Current behavior:**
 The PR adds a `--json` flag that serializes the issue list to JSON. The happy
@@ -171,10 +188,12 @@ is untouched when the flag is absent.
   instead of the plain-text error
 - Reuse the existing serializer the PR already added; don't introduce a second
 
+**Design:** no UI
+
 **Acceptance criteria:**
 - [ ] `triage list --json` emits valid JSON for both success and error cases
 - [ ] Exit codes match the non-JSON command
-- [ ] A test covers the `--json` success output and one error case
+- [ ] A test covers the `--json` success output and one error case (CLI test suite)
 - [ ] Default (non-JSON) output is byte-for-byte unchanged
 
 **Out of scope:**
