@@ -10,9 +10,28 @@ with OpenSpec.
 - **Knowledge** receives only verified, durable current-state facts after the
   change is implemented, excluding planning history.
 
-The result is a deliberate handoff: `wayfinder` for discovery → `grill-me` for
-pressure-testing decisions → OpenSpec for planned and implemented change. The
-skills favor mechanical checks wherever a convention can be made executable.
+The skills favor mechanical checks wherever a convention can be made
+executable.
+
+## Workflow
+
+1. **Backlog.** GitHub issues carry a category, a state, and a priority label.
+   `/triage` picks the next `ready-for-agent` issue by priority.
+2. **Readiness.** Planning gathers enough data to build, so its depth follows
+   the gaps. `triage` fills the agent-brief fields and routes on the empty
+   ones:
+   - every field filled, often a one-line feature: the brief is the spec;
+   - fields only a human can answer: `grilling` on those fields;
+   - OpenSpec-sized work (see `triage` step 4): `wayfinder` for discovery →
+     `grill-me` → OpenSpec;
+   - a bug: the verified repro, with no OpenSpec.
+   UI work in a repository listed in `ume-design` is designed in Penpot.
+3. **Build loop.** `ume-implement` (or `openspec-apply-change` for an OpenSpec
+   change) runs each unit as delegate → review → verify on the real surface →
+   commit. Bugs commit a failing check before the fix. A design gap returns to
+   planning.
+4. **Ship.** `ume-pr` writes the proof, the PR closes the issue, and verified
+   facts move to knowledge with `openspec-to-knowledge`.
 
 Install every skill globally for supported agents with `npx skills`:
 

@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Run a grilling session for unresolved product, architecture, or UI decisions and capture them in OpenSpec before implementation. Use when the user says "grill me", asks to pressure-test a design, or a Wayfinder ticket needs human decisions and visual companion support.
+description: Run a grilling session for unresolved product, architecture, or UI decisions and capture them in OpenSpec or the issue's agent brief before implementation. Use when the user says "grill me", asks to pressure-test a design, or a Wayfinder ticket needs human decisions and visual companion support.
 ---
 
 # OpenSpec Grill
@@ -17,8 +17,8 @@ it.
 1. Read the repository's canonical knowledge source and inspect code for questions that
    can be answered from the repository. Finding facts is your job, never the
    user's: dispatch a subagent rather than asking for anything discoverable.
-2. Decide whether the work needs OpenSpec. Use it for features, non-trivial bug
-   fixes, and architectural changes; skip it for isolated typo/config changes.
+2. Decide whether the work needs OpenSpec: it does when the work is
+   **OpenSpec-sized** per the [triage routing table](../triage/SKILL.md#triage-a-specific-issue-or-pr).
 3. For OpenSpec work, locate a named active change with:
 
    ```bash
@@ -32,7 +32,8 @@ it.
    openspec new change <name>
    ```
 
-4. Ask the whole frontier in one round, per `$grilling`: number each question,
+4. Start the frontier at the agent-brief fields triage left empty, when it
+   left any. Ask the whole frontier in one round, per `$grilling`: number each question,
    give a recommended answer and its trade-off, then wait. Recompute the
    frontier from the answers and ask the next round.
 5. Once the change is understood, use OpenSpec's current instructions to write
@@ -47,9 +48,22 @@ it.
 6. End by naming the OpenSpec change and recommending `$writing-plans` to make
    it apply-ready.
 
+When the work is not OpenSpec-sized (a bug, or a feature whose agent-brief
+fields the rounds have now answered), skip steps 3, 5, and 6: update the
+issue's agent brief, move it to `ready-for-agent`, and end, pointing at
+`ume-implement` (its bug-fix playbook for a bug).
+
+## UI design
+
+When the repository has a row in `ume-design`'s table, design each materially
+visual decision as a Penpot board through `ume-design`, and link the board from
+the OpenSpec design and the issue's **Design** field. The board is the design
+the build loop verifies against.
+
 ## UI visual companion
 
-When invoked from a UI-related Wayfinder ticket, this section is mandatory:
+For a repository without a row in `ume-design`'s table: when invoked from a
+UI-related Wayfinder ticket, this section is mandatory:
 classify every question as visual or text-first, and use the companion for each
 materially visual decision after the user accepts the session.
 
@@ -76,6 +90,6 @@ and interaction patterns; do not invent a parallel visual language.
 
 ## Guardrails
 
-- Record accepted decisions in the OpenSpec proposal or design; update canonical knowledge only after implementation and verification.
+- Record accepted decisions in the OpenSpec proposal or design, or in the issue's agent brief when the work skips OpenSpec; update canonical knowledge only after implementation and verification.
 - If the user rejects the change, keep the rationale in the OpenSpec proposal
   only when it would prevent the same design from being re-proposed later.
